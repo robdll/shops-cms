@@ -1,20 +1,19 @@
 <?php
 include('../includes/db.php');
 session_start();
-
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    // query parametriche contro SQL injection
-    $query = "SELECT tipo FROM utente WHERE email=$1 AND password=$2";
+    $query = "SELECT nome, tipo FROM utente WHERE email=$1 AND password=$2";
     $result = pg_query_params($conn, $query, array($username, $password));
 
     if ($result && pg_num_rows($result) == 1) {
         $row = pg_fetch_assoc($result);
         $_SESSION['email'] = $username;
+        $_SESSION['nome'] = $row['nome'];
         $_SESSION['tipo'] = $row['tipo'];
         header('Location: dashboard.php');
         exit;
@@ -23,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
 
 <h2>Login</h2>
 <form method="POST">
