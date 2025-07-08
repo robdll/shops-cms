@@ -7,6 +7,21 @@ if (!isset($_SESSION['email'])) {
 
 include('../includes/db.php');
 
+$email = $_SESSION['email'];
+
+// Troviamo saldo punti
+$query = "SELECT t.saldo_punti
+          FROM tessera t
+          JOIN utente u ON t.utente = u.id
+          WHERE u.email = $1";
+$result = pg_query_params($conn, $query, array($email));
+
+$saldo = 0;
+if ($result && pg_num_rows($result) == 1) {
+    $row = pg_fetch_assoc($result);
+    $saldo = $row['saldo_punti'];
+}
+
 if (isset($_GET['id'])) {
     $id = intval($_GET['id']);
     $query = "SELECT id, indirizzo, orario_apertura, orario_chiusura
@@ -60,11 +75,18 @@ if (isset($_GET['id'])) {
         <label>Applica sconto:</label>
         <select name="sconto">
             <option value="0">Nessuno</option>
-            <option value="5">5%</option>
-            <option value="15">15%</option>
-            <option value="30">30%</option>
+            <?php if ($saldo >= 100) { ?>
+                <option value="5">5%</option>
+            <?php } ?>
+            <?php if ($saldo >= 200) { ?>
+                <option value="15">15%</option>
+            <?php } ?>
+            <?php if ($saldo >= 300) { ?>
+                <option value="30">30%</option>
+            <?php } ?>
         </select>
 
+        </br>
         <button type="submit">Compra</button>
     </form>
 
