@@ -11,3 +11,6 @@ $tipo = $_SESSION['tipo'];
 
 <h2>Dashboard</h2>
 <p>Ciao <?php echo htmlspecialchars($nome) ?> (<?php echo htmlspecialchars($tipo) ?>)</p>
+
+<p><a href="tessera.php">Visualizza saldo punti</a></p>
+<p><a href="modifica-password.php">Modifica password</a></p>
