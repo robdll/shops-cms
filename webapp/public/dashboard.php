@@ -14,3 +14,5 @@ $tipo = $_SESSION['tipo'];
 
 <p><a href="tessera.php">Visualizza saldo punti</a></p>
 <p><a href="modifica-password.php">Modifica password</a></p>
+<p><a href="negozio.php">Negozi</a></p>
+
