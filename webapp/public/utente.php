@@ -1,8 +1,6 @@
 <?php
 session_start();
 
-echo "<pre>SESSION: "; print_r($_SESSION); echo "</pre>";
-
 include('../includes/check-auth.php');
 include('../includes/check-gestore.php');
 include('../includes/db.php');
@@ -22,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "INSERT INTO utente (nome, cognome, email, password, codice_fiscale, tipo) VALUES ($1, $2, $3, $4, $5, $6)",
             [$nome, $cognome, $email, $password, $cf, $tipo]);
 
-        header("Location: utenti.php?msg=Utente aggiunto con successo");
+        header("Location: utente.php?msg=Utente aggiunto con successo");
         exit;
     }
 
@@ -37,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "UPDATE utente SET nome=$1, cognome=$2, codice_fiscale=$3, tipo=$4 WHERE id=$5",
             [$nome, $cognome, $cf, $tipo, $id]);
 
-        header("Location: utenti.php?msg=Utente ID $id aggiornato con successo");
+        header("Location: utente.php?id=$id&msg=Utente aggiornato con successo");
         exit;
     }
 
@@ -49,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "INSERT INTO tessera (saldo_punti, data_rilascio, negozio, utente) VALUES (0, current_date, $1, $2)",
             [$negozio_id, $utente_id]);
 
-        header("Location: utenti.php?msg=Tessera assegnata a utente ID $utente_id");
+        header("Location: utente.php?id=$utente_id&msg=Tessera assegnata con successo");
         exit;
     }
 }
@@ -78,20 +76,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <tbody>
       <?php
       $res = pg_query($conn, 
-          "SELECT u.id, u.nome, u.cognome, u.codice_fiscale, u.email, t.id AS tessera_id
+          "SELECT u.id, u.nome, u.cognome, u.codice_fiscale, u.email, u.tipo, t.id AS tessera_id
            FROM utente u
            LEFT JOIN tessera t ON u.id = t.utente
            ORDER BY u.id");
       while ($r = pg_fetch_assoc($res)) { ?>
         <tr>
-          <td><?= htmlspecialchars($r['id']) ?></td>
-          <td><?= htmlspecialchars($r['nome']) ?></td>
-          <td><?= htmlspecialchars($r['cognome']) ?></td>
-          <td><?= htmlspecialchars($r['codice_fiscale']) ?></td>
-          <td><?= htmlspecialchars($r['email']) ?></td>
+          <td class="<?= $r['tipo'] === 'gestore' ? 'text-danger' : '' ?>">
+            <?= htmlspecialchars($r['id']) ?>
+          </td>
+          <td class="<?= $r['tipo'] === 'gestore' ? 'text-danger' : '' ?>">
+            <?= htmlspecialchars($r['nome']) ?>
+          </td>
+          <td class="<?= $r['tipo'] === 'gestore' ? 'text-danger' : '' ?>">
+            <?= htmlspecialchars($r['cognome']) ?>
+          </td>
+          <td class="<?= $r['tipo'] === 'gestore' ? 'text-danger' : '' ?>">
+            <?= htmlspecialchars($r['codice_fiscale']) ?>
+          </td>
+          <td class="<?= $r['tipo'] === 'gestore' ? 'text-danger' : '' ?>">
+            <?= htmlspecialchars($r['email']) ?>
+          </td>
           <td><?= htmlspecialchars($r['tessera_id'] ?? '') ?></td>
           <td>
-            <a href="utenti.php?id=<?= $r['id'] ?>" class="btn btn-sm btn-primary">Gestisci</a>
+            <a href="utente.php?id=<?= $r['id'] ?>" class="btn btn-sm btn-primary">Gestisci</a>
           </td>
         </tr>
       <?php } ?>
@@ -163,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </select>
     </div>
     <button type="submit" name="update" class="btn btn-warning">Salva Modifiche</button>
-    <a href="utenti.php" class="btn btn-secondary">Indietro</a>
+    <a href="utente.php" class="btn btn-secondary">Indietro</a>
   </form>
 
   <h4>Assegna Tessera a questo Utente</h4>
