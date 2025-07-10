@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $indirizzo = $_POST['indirizzo'];
 
         pg_query_params($conn,
-            'INSERT INTO "Kalunga".fornitore (partita_iva, indirizzo) VALUES ($1, $2)',
+            'INSERT INTO fornitore (partita_iva, indirizzo) VALUES ($1, $2)',
             [$piva, $indirizzo]);
 
         header("Location: fornitore.php?msg=Fornitore aggiunto con successo");
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $prezzo = (float)$_POST['prezzo'];
 
         pg_query_params($conn,
-            'INSERT INTO "Kalunga".fornitore_prodotto (fornitore, prodotto, disponibilita, costo_unitario) VALUES ($1, $2, $3, $4)',
+            'INSERT INTO fornitore_prodotto (fornitore, prodotto, disponibilita, costo_unitario) VALUES ($1, $2, $3, $4)',
             [$fornitore, $prodotto, $disponibilita, $prezzo]);
 
         header("Location: fornitore.php?fornitore=$fornitore&msg=Prodotto aggiunto al fornitore");
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $prodotto = (int)$_POST['prodotto_id'];
 
         pg_query_params($conn,
-            'DELETE FROM "Kalunga".fornitore_prodotto WHERE fornitore=$1 AND prodotto=$2',
+            'DELETE FROM fornitore_prodotto WHERE fornitore=$1 AND prodotto=$2',
             [$fornitore, $prodotto]);
 
         header("Location: fornitore.php?fornitore=$fornitore&msg=Prodotto rimosso dal fornitore");
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </thead>
     <tbody>
       <?php
-      $res = pg_query($conn, 'SELECT * FROM "Kalunga".fornitore ORDER BY partita_iva');
+      $res = pg_query($conn, 'SELECT * FROM fornitore ORDER BY partita_iva');
       while ($r = pg_fetch_assoc($res)) { ?>
         <tr>
           <td><?= htmlspecialchars($r['partita_iva']) ?></td>
@@ -94,17 +94,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php else: ?>
   <?php
     $piva = $_GET['fornitore'];
-    $q = pg_query_params($conn, 'SELECT * FROM "Kalunga".fornitore WHERE partita_iva=$1', [$piva]);
+    $q = pg_query_params($conn, 'SELECT * FROM fornitore WHERE partita_iva=$1', [$piva]);
     $fornitore = pg_fetch_assoc($q);
 
     $prodotti_forniti = pg_query_params($conn,
         'SELECT fp.prodotto, p.nome, fp.disponibilita, fp.costo_unitario AS prezzo_acquisto
-         FROM "Kalunga".fornitore_prodotto fp
-         JOIN "Kalunga".prodotto p ON p.id = fp.prodotto
+         FROM fornitore_prodotto fp
+         JOIN prodotto p ON p.id = fp.prodotto
          WHERE fp.fornitore = $1
          ORDER BY p.nome', [$piva]);
 
-    $prodotti = pg_query($conn, 'SELECT id, nome FROM "Kalunga".prodotto ORDER BY nome');
+    $prodotti = pg_query($conn, 'SELECT id, nome FROM prodotto ORDER BY nome');
   ?>
   <h3 class="mt-5">Gestisci Fornitore <?= htmlspecialchars($piva) ?></h3>
   <p><strong>Indirizzo:</strong> <?= htmlspecialchars($fornitore['indirizzo']) ?></p>
