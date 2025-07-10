@@ -1,22 +1,51 @@
 <?php
 session_start();
-if (!isset($_SESSION['email'])) {
+if (!isset($_SESSION['email']) || !isset($_SESSION['tipo']) || !isset($_SESSION['nome'])) {
     header('Location: login.php');
     exit;
 }
 
 include('../includes/db.php');
 
+$tipo = $_SESSION['tipo'];
 $email = $_SESSION['email'];
 
-// Trova utente + tessera
-$query = "SELECT u.id AS utente_id, t.id AS tessera_id, COALESCE(t.saldo_punti,0) AS saldo_punti
-          FROM utente u LEFT JOIN tessera t ON t.utente = u.id
-          WHERE u.email = $1";
-$result = pg_query_params($conn, $query, [$email]);
-$user = pg_fetch_assoc($result);
+// gestione POST inserimento/modifica/eliminazione negozio
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $tipo === 'gestore') {
+    if (isset($_POST['inserisci_negozio'])) {
+        $indirizzo = $_POST['indirizzo'];
+        $apertura = $_POST['apertura'];
+        $chiusura = $_POST['chiusura'];
 
-// Se mostra lista negozi
+        // prendi ID gestore corrente
+        $res = pg_query_params($conn, "SELECT id FROM utente WHERE email=$1", [$email]);
+        $gestore_id = pg_fetch_result($res, 0, 0);
+
+        pg_query_params($conn,
+            "INSERT INTO negozio (indirizzo, orario_apertura, orario_chiusura, responsabile, eliminato)
+             VALUES ($1, $2, $3, $4, false)",
+            [$indirizzo, $apertura, $chiusura, $gestore_id]);
+    }
+
+    if (isset($_POST['modifica_negozio'])) {
+        $negozio_id = intval($_POST['negozio_id']);
+        $indirizzo = $_POST['indirizzo'];
+        $apertura = $_POST['apertura'];
+        $chiusura = $_POST['chiusura'];
+        pg_query_params($conn,
+            "UPDATE negozio SET indirizzo=$1, orario_apertura=$2, orario_chiusura=$3 WHERE id=$4",
+            [$indirizzo, $apertura, $chiusura, $negozio_id]);
+    }
+
+    if (isset($_POST['elimina_negozio'])) {
+        $negozio_id = intval($_POST['negozio_id']);
+        pg_query_params($conn,
+            "UPDATE negozio SET eliminato=true WHERE id=$1",
+            [$negozio_id]);
+    }
+}
+
+// se non è stato selezionato un negozio, mostra lista
 if (!isset($_GET['id'])) {
     $result = pg_query($conn, "SELECT id, indirizzo, orario_apertura, orario_chiusura FROM negozio WHERE eliminato = false");
     ?>
@@ -32,46 +61,65 @@ if (!isset($_GET['id'])) {
             </tr>
         <?php } ?>
     </table>
-    <p><a href="dashboard.php">Torna alla dashboard</a></p>
     <style>tr:hover {background:#eee; cursor:pointer;}</style>
-    <?php exit;
+
+    <?php if ($tipo === 'gestore') { ?>
+        <h3>Inserisci nuovo negozio</h3>
+        <form method="POST">
+            <input type="text" name="indirizzo" placeholder="Indirizzo" required>
+            <input type="time" name="apertura" required>
+            <input type="time" name="chiusura" required>
+            <button type="submit" name="inserisci_negozio">Aggiungi negozio</button>
+        </form>
+    <?php } ?>
+
+    <p><a href="dashboard.php">Torna alla dashboard</a></p>
+    <?php
+    exit;
 }
 
-// Se mostra prodotti del negozio selezionato
+// se è stato selezionato un negozio
 $negozio_id = intval($_GET['id']);
-$query = "SELECT id, indirizzo FROM negozio WHERE id=$1 AND eliminato=false";
+$query = "SELECT id, indirizzo, orario_apertura, orario_chiusura FROM negozio WHERE id=$1 AND eliminato=false";
 $result = pg_query_params($conn, $query, [$negozio_id]);
 if (pg_num_rows($result) != 1) {
-    echo "<p>Negozio non trovato o eliminato.</p>";
+    header('Location: negozio.php');
     exit;
 }
 $negozio = pg_fetch_assoc($result);
 
+// mostra prodotti
 $prodotti = pg_query_params($conn,
-    "SELECT p.id, p.nome, pn.prezzo_vendita
-     FROM prodotto_negozio pn JOIN prodotto p ON pn.prodotto = p.id
+    "SELECT p.id, p.nome, p.descrizione, pn.prezzo_vendita
+     FROM prodotto_negozio pn
+     JOIN prodotto p ON pn.prodotto = p.id
      WHERE pn.negozio = $1", [$negozio_id]);
 ?>
 <h2>Negozio <?php echo htmlspecialchars($negozio['indirizzo']) ?></h2>
-<form action="compra.php" method="POST">
-    <input type="hidden" name="negozio_id" value="<?php echo $negozio_id ?>">
-    <table border="1">
-        <tr><th>Prodotto</th><th>Prezzo</th><th>Quantità</th></tr>
-        <?php while ($p = pg_fetch_assoc($prodotti)) { ?>
-            <tr>
-                <td><?php echo htmlspecialchars($p['nome']) ?></td>
-                <td><?php echo htmlspecialchars($p['prezzo_vendita']) ?></td>
-                <td><input type="number" name="quantita[<?php echo $p['id'] ?>]" value="0" min="0"></td>
-            </tr>
-        <?php } ?>
-    </table>
-    <label>Sconto:</label>
-    <select name="sconto">
-        <option value="0">Nessuno</option>
-        <?php if ($user['saldo_punti'] >= 100) echo '<option value="5">5%</option>'; ?>
-        <?php if ($user['saldo_punti'] >= 200) echo '<option value="15">15%</option>'; ?>
-        <?php if ($user['saldo_punti'] >= 300) echo '<option value="30">30%</option>'; ?>
-    </select>
-    <button type="submit">Acquista</button>
-</form>
+<table border="1">
+    <tr><th>Prodotto</th><th>Prezzo</th><th>Descrizione</th></tr>
+    <?php while ($p = pg_fetch_assoc($prodotti)) { ?>
+        <tr>
+            <td><?php echo htmlspecialchars($p['nome']) ?></td>
+            <td><?php echo htmlspecialchars($p['prezzo_vendita']) ?></td>
+            <td><?php echo htmlspecialchars($p['descrizione'] ?? '') ?></td>
+        </tr>
+    <?php } ?>
+</table>
+
+<?php if ($tipo === 'gestore') { ?>
+    <h3>Gestisci negozio</h3>
+    <form method="POST">
+        <input type="hidden" name="negozio_id" value="<?php echo $negozio_id ?>">
+        <input type="text" name="indirizzo" value="<?php echo htmlspecialchars($negozio['indirizzo']) ?>" required>
+        <input type="time" name="apertura" value="<?php echo htmlspecialchars($negozio['orario_apertura']) ?>" required>
+        <input type="time" name="chiusura" value="<?php echo htmlspecialchars($negozio['orario_chiusura']) ?>" required>
+        <button type="submit" name="modifica_negozio">Salva modifiche</button>
+    </form>
+    <form method="POST" style="margin-top:10px;">
+        <input type="hidden" name="negozio_id" value="<?php echo $negozio_id ?>">
+        <button type="submit" name="elimina_negozio" onclick="return confirm('Sei sicuro di voler eliminare questo negozio?')">Elimina negozio</button>
+    </form>
+<?php } ?>
+
 <p><a href="negozio.php">Torna ai negozi</a></p>
