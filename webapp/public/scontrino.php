@@ -8,72 +8,35 @@ if (!isset($_SESSION['email'])) {
 include('../includes/db.php');
 
 $scontrino_id = intval($_GET['id']);
-$sconto_applicato = false;
 
-// recupera scontrino + negozio
-$query = "SELECT s.id, s.data_acquisto, s.sconto_percentuale, s.totale_pagato, s.tessera, n.id AS negozio_id
+// Carica scontrino
+$query = "SELECT s.*, n.indirizzo AS negozio_indirizzo
           FROM scontrino s
           JOIN negozio n ON s.negozio = n.id
           WHERE s.id = $1";
-$result = pg_query_params($conn, $query, array($scontrino_id));
+$result = pg_query_params($conn, $query, [$scontrino_id]);
 $scontrino = pg_fetch_assoc($result);
 
-// recupera saldo tessera
-$saldo = 0;
-if ($scontrino['tessera']) {
-    $query = "SELECT saldo_punti FROM tessera WHERE id = $1";
-    $result = pg_query_params($conn, $query, array($scontrino['tessera']));
-    $row = pg_fetch_assoc($result);
-    $saldo = $row['saldo_punti'];
-}
-
-// applica sconto solo al submit POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $perc_sconto = intval($_POST['sconto']);
-    $query = "SELECT \"Kalunga\".applica_sconto_scontrino($1::integer, $2::integer)";
-    pg_query_params($conn, $query, array($scontrino_id, $perc_sconto));
-    $sconto_applicato = true;
-
-    // ricarica scontrino aggiornato
-    $query = "SELECT s.sconto_percentuale, s.totale_pagato FROM scontrino s WHERE s.id = $1";
-    $result = pg_query_params($conn, $query, array($scontrino_id));
-    $scontrino = array_merge($scontrino, pg_fetch_assoc($result));
-
-    // aggiorna saldo tessera
-    if ($scontrino['tessera']) {
-        $query = "SELECT saldo_punti FROM tessera WHERE id = $1";
-        $result = pg_query_params($conn, $query, array($scontrino['tessera']));
-        $row = pg_fetch_assoc($result);
-        $saldo = $row['saldo_punti'];
-    }
-}
+// Carica prodotti
+$prodotti = pg_query_params($conn,
+    "SELECT p.nome, sp.quantita, sp.prezzo_unitario
+     FROM scontrino_prodotto sp
+     JOIN prodotto p ON sp.prodotto = p.id
+     WHERE sp.scontrino = $1", [$scontrino_id]);
 ?>
-<h2>Scontrino #<?php echo htmlspecialchars($scontrino['id']) ?></h2>
-<p>Data: <?php echo htmlspecialchars($scontrino['data_acquisto']) ?></p>
-<p>Negozio: <?php echo 'Negozio ' . htmlspecialchars($scontrino['negozio_id']) ?></p>
-
-<p>Sconto applicato: <?php echo htmlspecialchars($scontrino['sconto_percentuale']) ?>%</p>
-<p>Totale pagato: € <?php echo htmlspecialchars($scontrino['totale_pagato']) ?></p>
-
-<?php if (!$sconto_applicato) { ?>
-    <form method="POST">
-        <label>Applica sconto:</label>
-        <select name="sconto">
-            <option value="0">Nessuno</option>
-            <?php if ($saldo >= 100) { ?>
-                <option value="5">5%</option>
-            <?php } ?>
-            <?php if ($saldo >= 200) { ?>
-                <option value="15">15%</option>
-            <?php } ?>
-            <?php if ($saldo >= 300) { ?>
-                <option value="30">30%</option>
-            <?php } ?>
-        </select>
-        <button type="submit">Applica sconto</button>
-    </form>
-<?php } else { ?>
-    <p>Saldo punti aggiornato: <?php echo htmlspecialchars($saldo) ?></p>
-<?php } ?>
-
-<p><a href="dashboard.php">Torna alla dashboard</a></p>
+<h2>Scontrino #<?php echo $scontrino_id ?></h2>
+<p><strong>Data:</strong> <?php echo htmlspecialchars($scontrino['data_acquisto']) ?></p>
+<p><strong>Negozio:</strong> <?php echo htmlspecialchars($scontrino['negozio_indirizzo']) ?></p>
+<table border="1">
+    <tr><th>Prodotto</th><th>Q.tà</th><th>Prezzo unitario</th></tr>
+    <?php while ($p = pg_fetch_assoc($prodotti)) { ?>
+        <tr>
+            <td><?php echo htmlspecialchars($p['nome']) ?></td>
+            <td><?php echo htmlspecialchars($p['quantita']) ?></td>
+            <td><?php echo htmlspecialchars($p['prezzo_unitario']) ?></td>
+        </tr>
+    <?php } ?>
+</table>
+<p><strong>Sconto applicato:</strong> <?php echo $scontrino['sconto_percentuale'] ?>%</p>
+<p><strong>Totale pagato:</strong> <?php echo $scontrino['totale_pagato'] ?> €</p>
+<p><a href="negozio.php">Torna ai negozi</a></p>
