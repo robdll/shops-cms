@@ -19,7 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $messaggio = $res ? "Negozio inserito!" : "Errore inserimento negozio.";
     }
     if (isset($_POST['aggiungi_prodotto'])) {
-        $id = $_GET['id'];
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: negozio.php');
+            exit;
+        }
         $prodotto = $_POST['prodotto'];
         $prezzo = $_POST['prezzo'];
         $query = "INSERT INTO prodotto_negozio (negozio, prodotto, prezzo_vendita) VALUES ($1, $2, $3)";
@@ -27,14 +31,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $messaggio = $res ? "Prodotto aggiunto!" : "Errore aggiunta prodotto.";
     }
     if (isset($_POST['rimuovi_prodotto'])) {
-        $id = $_GET['id'];
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: negozio.php');
+            exit;
+        }
         $prodotto = $_POST['prodotto_id'];
         $query = "DELETE FROM prodotto_negozio WHERE negozio=$1 AND prodotto=$2";
         $res = pg_query_params($conn, $query, [$id, $prodotto]);
         $messaggio = $res ? "Prodotto rimosso!" : "Errore rimozione prodotto.";
     }
     if (isset($_POST['modifica_negozio'])) {
-        $id = $_GET['id'];
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: negozio.php');
+            exit;
+        }
         $indirizzo = $_POST['indirizzo'];
         $apertura = $_POST['apertura'];
         $chiusura = $_POST['chiusura'];
@@ -43,9 +55,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $messaggio = $res ? "Dati negozio aggiornati!" : "Errore modifica negozio.";
     }
     if (isset($_POST['elimina_negozio'])) {
-        $id = $_GET['id'];
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            header('Location: negozio.php');
+            exit;
+        }
         $query = "DELETE FROM negozio WHERE id=$1";
-        $res = pg_query_params($conn, $query, [$id]);
+        pg_query_params($conn, $query, [$id]);
         header('Location: negozio.php');
         exit;
     }
@@ -71,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </thead>
     <tbody>
       <?php
-      $res = pg_query($conn, "SELECT * FROM negozio");
+      $res = pg_query($conn, "SELECT * FROM negozio ORDER BY id");
       while ($r = pg_fetch_assoc($res)) { ?>
         <tr onclick="window.location='negozio.php?id=<?= $r['id'] ?>'">
           <td><?= htmlspecialchars($r['id']) ?></td>
@@ -104,22 +120,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php else: ?>
   <?php
-    $id = $_GET['id'];
+    $id = $_GET['id'] ?? null;
+    if (!$id) {
+        header('Location: negozio.php');
+        exit;
+    }
     $q = pg_query_params($conn, "SELECT * FROM negozio WHERE id=$1", [$id]);
     $negozio = pg_fetch_assoc($q);
   ?>
   <h2>Negozio ID <?= htmlspecialchars($id) ?></h2>
-  <p><strong><?= htmlspecialchars($negozio['indirizzo']) ?></strong> 
+  <p><strong><?= htmlspecialchars($negozio['indirizzo']) ?></strong>
      (<?= htmlspecialchars($negozio['orario_apertura']) ?> - <?= htmlspecialchars($negozio['orario_chiusura']) ?>)</p>
 
-  <?php if (isset($_GET['id'])): ?>
-    <p class="mt-4"><a href="negozio.php" class="btn btn-secondary">Torna alla Lista Negozi</a></p>
-  <?php endif; ?>
+  <p class="mt-4"><a href="negozio.php" class="btn btn-secondary">Torna alla Lista Negozi</a></p>
 
   <h4 class="mt-4">Acquista Prodotti</h4>
-  <form action="scontrino.php" method="POST">
+  <form action="compra.php" method="POST">
     <input type="hidden" name="negozio" value="<?= $id ?>">
-
     <table class="table table-striped">
       <thead>
         <tr>
@@ -134,14 +151,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $res = pg_query_params($conn, "SELECT p.nome, pn.prodotto, pn.prezzo_vendita 
                                        FROM prodotto_negozio pn 
                                        JOIN prodotto p ON p.id = pn.prodotto 
-                                       WHERE pn.negozio=$1
-                                       ORDER BY p.nome", [$id]);
+                                       WHERE pn.negozio=$1 ORDER BY p.nome", [$id]);
         while ($r = pg_fetch_assoc($res)) { ?>
           <tr>
             <td><?= htmlspecialchars($r['nome']) ?></td>
             <td><?= htmlspecialchars($r['prezzo_vendita']) ?></td>
             <td>
-              <input type="number" class="form-control" name="quantita[<?= $r['prodotto'] ?>]" min="0" max="1000"  placeholder="0">
+              <input type="number" class="form-control" name="quantita[<?= $r['prodotto'] ?>]" min="0" max="1000" placeholder="0">
               <input type="hidden" name="prezzo[<?= $r['prodotto'] ?>]" value="<?= $r['prezzo_vendita'] ?>">
             </td>
             <?php if ($tipo === 'gestore'): ?>
@@ -168,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <select name="prodotto" class="form-select" required>
           <option value="">Seleziona prodotto</option>
           <?php
-          $opt = pg_query($conn, "SELECT id, nome FROM prodotto");
+          $opt = pg_query($conn, "SELECT id, nome FROM prodotto ORDER BY nome");
           while ($p = pg_fetch_assoc($opt)) {
             echo "<option value='".htmlspecialchars($p['id'])."'>".htmlspecialchars($p['nome'])."</option>";
           }

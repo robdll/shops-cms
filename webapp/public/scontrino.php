@@ -1,13 +1,12 @@
 <?php
 session_start();
 if (!isset($_SESSION['email'])) {
-    header('Location: login.php');
+    header('Location: index.php');
     exit;
 }
-
 include('../includes/db.php');
 
-$scontrino_id = intval($_GET['id']);
+$scontrino_id = $_GET['id'] ?? null;
 
 // Carica scontrino
 $query = "SELECT s.*, n.indirizzo AS negozio_indirizzo
@@ -17,6 +16,11 @@ $query = "SELECT s.*, n.indirizzo AS negozio_indirizzo
 $result = pg_query_params($conn, $query, [$scontrino_id]);
 $scontrino = pg_fetch_assoc($result);
 
+if (!$scontrino) {
+    echo "Scontrino non trovato.";
+    exit;
+}
+
 // Carica prodotti
 $prodotti = pg_query_params($conn,
     "SELECT p.nome, sp.quantita, sp.prezzo_unitario
@@ -24,19 +28,37 @@ $prodotti = pg_query_params($conn,
      JOIN prodotto p ON sp.prodotto = p.id
      WHERE sp.scontrino = $1", [$scontrino_id]);
 ?>
-<h2>Scontrino #<?php echo $scontrino_id ?></h2>
-<p><strong>Data:</strong> <?php echo htmlspecialchars($scontrino['data_acquisto']) ?></p>
-<p><strong>Negozio:</strong> <?php echo htmlspecialchars($scontrino['negozio_indirizzo']) ?></p>
-<table border="1">
-    <tr><th>Prodotto</th><th>Q.tà</th><th>Prezzo unitario</th></tr>
+
+<?php include('header.php') ?>
+
+<h2>Dettaglio Scontrino #<?= htmlspecialchars($scontrino_id) ?></h2>
+<p><strong>Data:</strong> <?= htmlspecialchars($scontrino['data_acquisto']) ?></p>
+<p><strong>Negozio:</strong> <?= htmlspecialchars($scontrino['negozio_indirizzo']) ?></p>
+
+<h4 class="mt-4">Prodotti acquistati</h4>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Prodotto</th>
+      <th>Quantità</th>
+      <th>Prezzo unitario</th>
+      <th>Subtotale</th>
+    </tr>
+  </thead>
+  <tbody>
     <?php while ($p = pg_fetch_assoc($prodotti)) { ?>
-        <tr>
-            <td><?php echo htmlspecialchars($p['nome']) ?></td>
-            <td><?php echo htmlspecialchars($p['quantita']) ?></td>
-            <td><?php echo htmlspecialchars($p['prezzo_unitario']) ?></td>
-        </tr>
+      <tr>
+        <td><?= htmlspecialchars($p['nome']) ?></td>
+        <td><?= htmlspecialchars($p['quantita']) ?></td>
+        <td><?= htmlspecialchars($p['prezzo_unitario']) ?> €</td>
+        <td><?= number_format($p['quantita'] * $p['prezzo_unitario'], 2) ?> €</td>
+      </tr>
     <?php } ?>
+  </tbody>
 </table>
-<p><strong>Sconto applicato:</strong> <?php echo $scontrino['sconto_percentuale'] ?>%</p>
-<p><strong>Totale pagato:</strong> <?php echo $scontrino['totale_pagato'] ?> €</p>
-<p><a href="negozio.php">Torna ai negozi</a></p>
+
+<p class="fs-4 mt-3"><strong>Totale pagato:</strong> <?= number_format($scontrino['totale_pagato'], 2) ?> €</p>
+
+<p><a href="dashboard.php" class="btn btn-secondary mt-3">Torna alla dashboard</a></p>
+
+<?php include('footer.php') ?>

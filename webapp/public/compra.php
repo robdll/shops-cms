@@ -1,69 +1,63 @@
 <?php
 session_start();
-if (!isset($_SESSION['email'])) {
-    header('Location: login.php');
-    exit;
-}
-
 include('../includes/db.php');
 
 $email = $_SESSION['email'];
-$negozio_id = intval($_POST['negozio_id']);
-$quantita = $_POST['quantita'];
-$sconto = intval($_POST['sconto']);
+$res = pg_query_params($conn, "SELECT id FROM utente WHERE email=$1", [$email]);
+$row = pg_fetch_assoc($res);
+$utente = $row['id'];
 
-// Trova utente e tessera
-$query = "SELECT u.id AS utente_id, t.id AS tessera_id
-          FROM utente u LEFT JOIN tessera t ON t.utente = u.id
-          WHERE u.email = $1";
-$result = pg_query_params($conn, $query, [$email]);
-$user = pg_fetch_assoc($result);
+$negozio = $_POST['negozio'] ?? null;
+$quantita = $_POST['quantita'] ?? [];
+$prezzi = $_POST['prezzo'] ?? [];
+$prodotti = [];
+$quantita_valid = [];
+$prezzi_valid = [];
+$totale = 0;
 
-// Crea scontrino vuoto
-$query = "INSERT INTO scontrino (data_acquisto, tessera, negozio, sconto_percentuale, totale_pagato, utente)
-          VALUES (CURRENT_DATE, $1, $2, 0, 0, $3) RETURNING id";
-$result = pg_query_params($conn, $query, [$user['tessera_id'], $negozio_id, $user['utente_id']]);
-$scontrino_id = pg_fetch_result($result, 0, 'id');
-
-// Prepara array sommando quantità per evitare duplicati
-$summary = [];
-foreach ($quantita as $pid => $qty) {
-    $qty = intval($qty);
-    if ($qty > 0) {
-        if (!isset($summary[$pid])) {
-            $summary[$pid] = $qty;
-        } else {
-            $summary[$pid] += $qty;
-        }
+foreach ($quantita as $id_prodotto => $qta) {
+    $qta = (int)$qta;
+    if ($qta > 0) {
+        $prodotti[] = $id_prodotto;
+        $quantita_valid[] = $qta;
+        $prezzi_valid[] = $prezzi[$id_prodotto];
+        $totale += $prezzi[$id_prodotto] * $qta;
     }
 }
 
-// Costruisci array finali
-$prodotti = [];
-$quantities = [];
-$prezzi = [];
+echo "<pre>";
+echo "Prodotti validi:\n";
+print_r($prodotti);
+echo "Quantità valide:\n";
+print_r($quantita_valid);
+echo "Prezzi validi:\n";
+print_r($prezzi_valid);
+echo "Totale calcolato: $totale\n";
+echo "</pre>";
 
-foreach ($summary as $pid => $qty) {
-    $res = pg_query_params($conn, 
-        "SELECT prezzo_vendita FROM prodotto_negozio WHERE negozio=$1 AND prodotto=$2",
-        [$negozio_id, $pid]);
-    $prezzo = pg_fetch_result($res, 0, 0);
-
-    $prodotti[] = $pid;
-    $quantities[] = $qty;
-    $prezzi[] = $prezzo;
+if (empty($prodotti)) {
+    echo "Nessun prodotto selezionato.";
+    exit;
 }
 
-// Richiama la funzione DB usando ARRAY[...] direttamente
-$sql = "SELECT crea_scontrino_con_prodotti(
-    $scontrino_id,
-    ARRAY[" . implode(',', $prodotti) . "]::int[],
-    ARRAY[" . implode(',', $quantities) . "]::int[],
-    ARRAY[" . implode(',', $prezzi) . "]::numeric[],
-    $sconto
-)";
-pg_query($conn, $sql);
+// crea scontrino
+$insert = pg_query_params($conn,
+    "INSERT INTO scontrino (data_acquisto, negozio, totale_pagato, utente) VALUES (CURRENT_DATE, $1, $2, $3) RETURNING id",
+    [$negozio, $totale, $utente]);
+$scontrino = pg_fetch_assoc($insert);
+$id_scontrino = $scontrino['id'];
 
-header("Location: scontrino.php?id=$scontrino_id");
+echo "Creato scontrino ID: $id_scontrino<br>";
+
+for ($i = 0; $i < count($prodotti); $i++) {
+    pg_query_params($conn,
+        "INSERT INTO scontrino_prodotto (scontrino, prodotto, prezzo_unitario, quantita)
+         VALUES ($1, $2, $3, $4)",
+        [$id_scontrino, $prodotti[$i], $prezzi_valid[$i], $quantita_valid[$i]]);
+    echo "Inserito prodotto {$prodotti[$i]} con qta {$quantita_valid[$i]} e prezzo {$prezzi_valid[$i]}<br>";
+}
+
+echo "<br>Redirect a scontrino.php?id=$id_scontrino";
+header("Location: scontrino.php?id=$id_scontrino");
 exit;
 ?>
