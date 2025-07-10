@@ -5,24 +5,48 @@ include('../includes/check-gestore.php');
 include('../includes/db.php');
 
 $messaggio = $_GET['msg'] ?? '';
+$tipo_alert = $_GET['tipo'] ?? 'success';
 
 $negozi = pg_query($conn, 'SELECT id, indirizzo FROM negozio WHERE eliminato = FALSE ORDER BY id');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['negozio'])) {
     $negozio_id = (int)$_POST['negozio'];
     $data = $_POST['data'];
+    $prodotti_non_approvv = [];
 
     foreach ($_POST['prodotto'] as $i => $prodotto_id) {
         $quantita = (int)$_POST['quantita'][$i];
         if ($quantita > 0) {
-            pg_query_params($conn,
-                'INSERT INTO approvvigionamento (negozio, prodotto, quantita, data_consegna)
-                 VALUES ($1, $2, $3, $4)',
-                [$negozio_id, $prodotto_id, $quantita, $data]);
+            // facciamo INSERT dentro una transazione separata per isolare gli errori
+            pg_query($conn, 'BEGIN');
+            try {
+                $res = pg_query_params($conn,
+                    'INSERT INTO approvvigionamento (negozio, prodotto, quantita, data_consegna)
+                     VALUES ($1, $2, $3, $4)',
+                    [$negozio_id, $prodotto_id, $quantita, $data]);
+                if (!$res) throw new Exception(pg_last_error($conn));
+                pg_query($conn, 'COMMIT');
+            } catch (Exception $e) {
+                pg_query($conn, 'ROLLBACK');
+                // recuperiamo nome del prodotto per mostrarlo
+                $nome_res = pg_query_params($conn,
+                    'SELECT nome FROM prodotto WHERE id = $1', [$prodotto_id]);
+                $nome_prodotto = pg_fetch_result($nome_res, 0, 'nome');
+                $prodotti_non_approvv[] = $nome_prodotto;
+            }
         }
     }
 
-    header("Location: approvvigionamento.php?negozio=$negozio_id&msg=Approvvigionamento effettuato con successo");
+    // prepara messaggio
+    $msg = "Approvvigionamento effettuato con successo";
+    if (!empty($prodotti_non_approvv)) {
+        $msg .= " - Non disponibili: " . implode(", ", $prodotti_non_approvv);
+        $tipo_alert = "warning";
+    } else {
+        $tipo_alert = "success";
+    }
+
+    header("Location: approvvigionamento.php?negozio=$negozio_id&msg=" . urlencode($msg) . "&tipo=$tipo_alert");
     exit;
 }
 
@@ -31,10 +55,10 @@ if (isset($_GET['negozio'])) {
     $negozio_id = (int)$_GET['negozio'];
     $storico_res = pg_query_params($conn,
         'SELECT a.data_consegna, p.nome, a.quantita, a.prezzo_unitario
-        FROM approvvigionamento a
-        JOIN prodotto p ON p.id = a.prodotto
-        WHERE a.negozio = $1
-        ORDER BY a.data_consegna DESC', [$negozio_id]);
+         FROM approvvigionamento a
+         JOIN prodotto p ON p.id = a.prodotto
+         WHERE a.negozio = $1
+         ORDER BY a.data_consegna DESC', [$negozio_id]);
     $storico = pg_fetch_all($storico_res) ?: [];
 }
 
@@ -43,7 +67,9 @@ $prodotti = pg_query($conn, 'SELECT id, nome FROM prodotto ORDER BY nome');
 <?php include('header.php') ?>
 
 <?php if ($messaggio): ?>
-  <div class="alert alert-success"><?= htmlspecialchars($messaggio) ?></div>
+  <div class="alert alert-<?= htmlspecialchars($tipo_alert) ?>">
+    <?= htmlspecialchars($messaggio) ?>
+  </div>
 <?php endif; ?>
 
 <h2>Approvvigionamento</h2>
@@ -77,11 +103,10 @@ $prodotti = pg_query($conn, 'SELECT id, nome FROM prodotto ORDER BY nome');
     <tbody>
       <?php foreach ($storico as $s): ?>
         <tr>
-        <td><?= htmlspecialchars($s['data_consegna']) ?></td>
-        <td><?= htmlspecialchars($s['nome']) ?></td>
-        <td><?= htmlspecialchars($s['quantita']) ?></td>
-        <td><?= htmlspecialchars($s['prezzo_unitario']) ?></td>
-
+          <td><?= htmlspecialchars($s['data_consegna']) ?></td>
+          <td><?= htmlspecialchars($s['nome']) ?></td>
+          <td><?= htmlspecialchars($s['quantita']) ?></td>
+          <td><?= htmlspecialchars($s['prezzo_unitario']) ?></td>
         </tr>
       <?php endforeach; ?>
     </tbody>
