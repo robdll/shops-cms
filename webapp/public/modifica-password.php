@@ -1,35 +1,76 @@
 <?php
 session_start();
 if (!isset($_SESSION['email'])) {
-    header('Location: login.php');
+    header('Location: index.php');
     exit;
 }
-
 include('../includes/db.php');
 
-$error = '';
-$success = '';
+$messaggio = '';
+$errore = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $new_password = $_POST['new_password'];
+    $email = $_SESSION['email'];
+    $old_password = trim($_POST['old_password']);
+    $new_password = trim($_POST['new_password']);
+    $confirm_password = trim($_POST['confirm_password']);
 
-    $query = "UPDATE utente SET password = $1 WHERE email = $2";
-    $result = pg_query_params($conn, $query, array($new_password, $_SESSION['email']));
-
-    if ($result) {
-        $success = "Password aggiornata con successo";
+    if ($new_password !== $confirm_password) {
+        $errore = "Le nuove password non coincidono.";
     } else {
-        $error = "Errore nell'aggiornamento della password";
+        // Verifica password attuale
+        $query = "SELECT * FROM utente WHERE email = $1 AND password = $2";
+        $result = pg_query_params($conn, $query, [$email, $old_password]);
+
+        if ($result && pg_num_rows($result) === 1) {
+            // Aggiorna password
+            $update = "UPDATE utente SET password = $1 WHERE email = $2";
+            $res = pg_query_params($conn, $update, [$new_password, $email]);
+            if ($res) {
+                $messaggio = "Password aggiornata con successo!";
+            } else {
+                $errore = "Errore durante l'aggiornamento della password.";
+            }
+        } else {
+            $errore = "Password attuale errata.";
+        }
     }
 }
 ?>
-<h2>Modifica password</h2>
-<form method="POST">
-    <input type="password" name="new_password" placeholder="Nuova password" required><br>
-    <button type="submit">Aggiorna</button>
-</form>
-<?php
-if ($error) echo "<p style='color:red'>$error</p>";
-if ($success) echo "<p style='color:green'>$success</p>";
-?>
-<p><a href="dashboard.php">Torna alla dashboard</a></p>
+
+<?php include('header.php') ?>
+
+<div class="row justify-content-center">
+  <div class="col-md-4">
+    <div class="card shadow">
+      <div class="card-body">
+        <h4 class="card-title mb-4 text-center">Modifica Password</h4>
+
+        <?php if ($messaggio): ?>
+          <div class="alert alert-success"><?= htmlspecialchars($messaggio) ?></div>
+        <?php endif; ?>
+        <?php if ($errore): ?>
+          <div class="alert alert-danger"><?= htmlspecialchars($errore) ?></div>
+        <?php endif; ?>
+
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">Password Attuale</label>
+            <input type="password" class="form-control" name="old_password" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Nuova Password</label>
+            <input type="password" class="form-control" name="new_password" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Conferma Nuova Password</label>
+            <input type="password" class="form-control" name="confirm_password" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Aggiorna Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<?php include('footer.php') ?>
