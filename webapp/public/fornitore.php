@@ -7,12 +7,15 @@ if (!isset($_SESSION['email']) || $_SESSION['tipo'] !== 'gestore') {
 
 include('../includes/db.php');
 
+$erroreDuplicateProduct = null;
+
+
 // gestione inserimento nuovo fornitore
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aggiungi_fornitore'])) {
     $partita_iva = $_POST['partita_iva'];
     $indirizzo = $_POST['indirizzo'];
     pg_query_params($conn,
-        "INSERT INTO \"Kalunga\".fornitore (partita_iva, indirizzo, eliminato) VALUES ($1, $2, false)",
+        "INSERT INTO fornitore (partita_iva, indirizzo, eliminato) VALUES ($1, $2, false)",
         [$partita_iva, $indirizzo]);
 }
 
@@ -23,9 +26,9 @@ if (isset($_GET['fornitore'])) {
     // gestione eliminazione
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['elimina_fornitore'])) {
         pg_query_params($conn,
-            "DELETE FROM \"Kalunga\".fornitore_prodotto WHERE fornitore=$1", [$fornitore]);
+            "DELETE FROM fornitore_prodotto WHERE fornitore=$1", [$fornitore]);
         pg_query_params($conn,
-            "DELETE FROM \"Kalunga\".fornitore WHERE partita_iva=$1", [$fornitore]);
+            "DELETE FROM fornitore WHERE partita_iva=$1", [$fornitore]);
         header('Location: fornitore.php');
         exit;
     }
@@ -35,17 +38,28 @@ if (isset($_GET['fornitore'])) {
         $prodotto = intval($_POST['prodotto']);
         $costo = floatval($_POST['costo']);
         $quantita = intval($_POST['quantita']);
-        pg_query_params($conn,
-            "INSERT INTO \"Kalunga\".fornitore_prodotto (fornitore, prodotto, costo_unitario, disponibilita)
-             VALUES ($1, $2, $3, $4)",
-            [$fornitore, $prodotto, $costo, $quantita]);
+        // controlla se esiste già
+        $exists = pg_query_params($conn,
+            "SELECT 1 FROM fornitore_prodotto WHERE fornitore=$1 AND prodotto=$2",
+            [$fornitore, $prodotto]
+        );
+
+        if (pg_num_rows($exists) > 0) {
+            $erroreDuplicateProduct = "Questo prodotto è già assegnato a questo fornitore.";
+        } else {
+            pg_query_params($conn,
+                "INSERT INTO fornitore_prodotto (fornitore, prodotto, costo_unitario, disponibilita)
+                VALUES ($1, $2, $3, $4)",
+                [$fornitore, $prodotto, $costo, $quantita]);
+        }
+
     }
 
     // mostra prodotti del fornitore
     $prodotti = pg_query_params($conn,
         "SELECT p.nome, fp.costo_unitario, fp.disponibilita
-         FROM \"Kalunga\".fornitore_prodotto fp
-         JOIN \"Kalunga\".prodotto p ON fp.prodotto = p.id
+         FROM fornitore_prodotto fp
+         JOIN prodotto p ON fp.prodotto = p.id
          WHERE fp.fornitore = $1", [$fornitore]);
     ?>
     <h2>Fornitore <?php echo htmlspecialchars($fornitore) ?></h2>
@@ -62,9 +76,9 @@ if (isset($_GET['fornitore'])) {
 
     <h3>Aggiungi prodotto a questo fornitore</h3>
     <form method="POST">
-        <select name="prodotto" required>
+        <select name="prodotto" required onchange="document.getElementById('erroreDuplicateProduct').innerText=''">
             <?php
-            $all = pg_query($conn, "SELECT id, nome FROM \"Kalunga\".prodotto ORDER BY nome");
+            $all = pg_query($conn, "SELECT id, nome FROM prodotto ORDER BY nome");
             while ($r = pg_fetch_assoc($all)) {
                 echo '<option value="'.htmlspecialchars($r['id']).'">'.htmlspecialchars($r['nome']).'</option>';
             }
@@ -74,6 +88,11 @@ if (isset($_GET['fornitore'])) {
         <input type="number" name="quantita" placeholder="Quantità" required>
         <button type="submit" name="aggiungi_prodotto">Aggiungi prodotto</button>
     </form>
+    <?php if ($erroreDuplicateProduct) { ?>
+        <p id="erroreDuplicateProduct" style="color:red;"><?php echo htmlspecialchars($erroreDuplicateProduct) ?></p>
+    <?php } else { ?>
+        <p id="erroreDuplicateProduct"></p>
+    <?php } ?>
 
     <form method="POST" style="margin-top:10px;">
         <button type="submit" name="elimina_fornitore" onclick="return confirm('Sei sicuro di voler eliminare questo fornitore e tutti i prodotti associati?')">Elimina fornitore</button>
@@ -86,7 +105,7 @@ if (isset($_GET['fornitore'])) {
 }
 
 // lista fornitori
-$result = pg_query($conn, "SELECT partita_iva, indirizzo FROM \"Kalunga\".fornitore ORDER BY partita_iva");
+$result = pg_query($conn, "SELECT partita_iva, indirizzo FROM fornitore ORDER BY partita_iva");
 ?>
 <h2>Fornitori</h2>
 <table border="1">
