@@ -783,6 +783,24 @@ INSERT INTO "Kalunga".approvvigionamento VALUES (50, 16, 'IT11122233344', '2025-
 INSERT INTO "Kalunga".approvvigionamento VALUES (52, 16, 'IT12345678901', '2025-07-10', 20, 1.15, 1);
 INSERT INTO "Kalunga".approvvigionamento VALUES (53, 16, 'IT12345678901', '2025-07-10', 20, 1.15, 1);
 INSERT INTO "Kalunga".approvvigionamento VALUES (54, 16, 'IT12345678901', '2025-07-18', 20, 1.15, 2);
+INSERT INTO "Kalunga".approvvigionamento VALUES (55, 4, 'IT11122233344', '2025-07-16', 7, 1.95, 20);
+INSERT INTO "Kalunga".approvvigionamento VALUES (56, 4, 'IT55566677788', '2025-07-16', 16, 0.95, 80);
+INSERT INTO "Kalunga".approvvigionamento VALUES (57, 4, 'IT11122233344', '2025-07-16', 10, 0.72, 99);
+INSERT INTO "Kalunga".approvvigionamento VALUES (58, 4, 'IT00065432109', '2025-07-10', 3, 0.60, 22);
+INSERT INTO "Kalunga".approvvigionamento VALUES (60, 4, 'IT12345678901', '2025-07-10', 18, 0.98, 99);
+INSERT INTO "Kalunga".approvvigionamento VALUES (61, 7, 'IT00065432109', '2025-07-10', 3, 0.60, 55);
+INSERT INTO "Kalunga".approvvigionamento VALUES (63, 16, 'IT98765432999', '2025-07-10', 24, 499.00, 4);
+INSERT INTO "Kalunga".approvvigionamento VALUES (64, 16, 'IT00065432109', '2025-07-10', 3, 0.60, 5);
+INSERT INTO "Kalunga".approvvigionamento VALUES (65, 16, 'IT98765432109', '2025-07-10', 1, 4.40, 2);
+INSERT INTO "Kalunga".approvvigionamento VALUES (67, 16, 'IT11122233344', '2025-07-10', 2, 1.50, 30);
+INSERT INTO "Kalunga".approvvigionamento VALUES (69, 16, 'IT55566677788', '2025-07-10', 18, 1.00, 5);
+INSERT INTO "Kalunga".approvvigionamento VALUES (70, 11, 'IT00065432109', '2025-07-10', 3, 0.60, 10);
+INSERT INTO "Kalunga".approvvigionamento VALUES (71, 11, 'IT00065432109', '2025-07-10', 3, 0.60, 2);
+INSERT INTO "Kalunga".approvvigionamento VALUES (74, 11, 'IT00065432109', '2025-07-10', 3, 0.60, 2);
+INSERT INTO "Kalunga".approvvigionamento VALUES (75, 5, 'IT00065432109', '2025-07-10', 3, 0.60, 2);
+INSERT INTO "Kalunga".approvvigionamento VALUES (77, 5, 'IT11122233344', '2025-07-10', 7, 1.95, 5);
+INSERT INTO "Kalunga".approvvigionamento VALUES (80, 5, 'IT11122233344', '2025-07-10', 2, 1.50, 5);
+INSERT INTO "Kalunga".approvvigionamento VALUES (81, 5, 'IT11122233344', '2025-07-10', 3, 1.00, 5);
 
 
 --
@@ -796,6 +814,8 @@ INSERT INTO "Kalunga".fornitore VALUES ('IT55566677788', 'Corso Francia 18, Tori
 INSERT INTO "Kalunga".fornitore VALUES ('IT88899900011', 'Piazza Repubblica 25, Firenze', false);
 INSERT INTO "Kalunga".fornitore VALUES ('IT11122233344', 'Via Toledo 5, Napoli', false);
 INSERT INTO "Kalunga".fornitore VALUES ('IT44455566677', 'Viale Regione Siciliana 120, Palermo', false);
+INSERT INTO "Kalunga".fornitore VALUES ('IT00065432109', 'via Basalto, Dolomiti', false);
+INSERT INTO "Kalunga".fornitore VALUES ('IT98765432999', 'Via Tutto, Bene', false);
 
 
 --
@@ -807,13 +827,19 @@ INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT98765432109', 2, 5.10, 15);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 16, 0.50, 12);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT12345678901', 16, 0.92, 12);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT44455566677', 13, 0.64, 46);
-INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 2, 1.50, 47);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT12345678901', 20, 1.15, 136);
+INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT55566677788', 16, 0.95, 10);
+INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 10, 0.72, 21);
+INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT12345678901', 18, 0.98, 0);
+INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT98765432999', 26, 9.90, 100);
+INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT98765432999', 24, 499.00, 1);
+INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT98765432109', 1, 4.40, 88);
+INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT55566677788', 18, 1.00, 125);
+INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT00065432109', 3, 0.60, 2);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT12345678901', 1, 4.50, 100);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT12345678901', 3, 1.20, 200);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT12345678901', 4, 0.30, 300);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT12345678901', 5, 0.35, 300);
-INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT98765432109', 1, 4.40, 90);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT98765432109', 6, 1.80, 50);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT98765432109', 7, 2.00, 100);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT98765432109', 8, 0.90, 150);
@@ -824,16 +850,12 @@ INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT22233344455', 12, 0.55, 200)
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT22233344455', 13, 0.65, 210);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT55566677788', 14, 2.50, 60);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT55566677788', 15, 3.20, 50);
-INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT55566677788', 16, 0.95, 90);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT55566677788', 17, 0.70, 110);
-INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT55566677788', 18, 1.00, 130);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT88899900011', 19, 1.90, 75);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT88899900011', 20, 1.20, 85);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT88899900011', 3, 1.25, 100);
-INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 7, 1.95, 70);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 8, 0.88, 95);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 9, 0.62, 110);
-INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 10, 0.72, 120);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT44455566677', 11, 1.08, 130);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT44455566677', 12, 0.52, 140);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT44455566677', 14, 2.45, 80);
@@ -846,14 +868,15 @@ INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT55566677788', 7, 2.02, 60);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT55566677788', 8, 0.93, 70);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT55566677788', 9, 0.67, 80);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT55566677788', 10, 0.78, 90);
+INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 7, 1.95, 45);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT98765432109', 3, 1.18, 75);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT88899900011', 4, 0.28, 185);
-INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT12345678901', 18, 0.98, 99);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT55566677788', 23, 1.10, 500);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT88899900011', 23, 1.00, 90);
+INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 2, 1.50, 12);
+INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 3, 1.00, 185);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 17, 0.80, 200);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT88899900011', 5, 0.32, 180);
-INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 3, 1.00, 190);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT11122233344', 6, 1.75, 40);
 INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT12345678901', 19, 1.85, 100);
 
@@ -862,7 +885,6 @@ INSERT INTO "Kalunga".fornitore_prodotto VALUES ('IT12345678901', 19, 1.85, 100)
 -- Data for Name: negozio; Type: TABLE DATA; Schema: Kalunga; Owner: -
 --
 
-INSERT INTO "Kalunga".negozio VALUES (4, 'Corso Buenos Aires 10, Milano', '09:00:00', '20:00:00', 1, false);
 INSERT INTO "Kalunga".negozio VALUES (5, 'Via Garibaldi 5, Torino', '10:00:00', '21:00:00', 4, false);
 INSERT INTO "Kalunga".negozio VALUES (7, 'Viale Liberta, Monza', '12:00:00', '22:00:00', 1, false);
 INSERT INTO "Kalunga".negozio VALUES (11, 'Corso Italia 45, Torino', '10:00:00', '21:00:00', 5, false);
@@ -872,13 +894,15 @@ INSERT INTO "Kalunga".negozio VALUES (12, 'Piazza Duomo 8, Firenze', '11:00:00',
 INSERT INTO "Kalunga".negozio VALUES (10, 'Via Vittorio Emanuele 12, Milano', '09:00:00', '20:00:00', 1, true);
 INSERT INTO "Kalunga".negozio VALUES (15, 'Via Conquista 12, Brasil', '06:00:00', '13:00:00', 6, true);
 INSERT INTO "Kalunga".negozio VALUES (16, 'via vitoria conquista 2', '08:00:00', '22:00:00', 6, false);
+INSERT INTO "Kalunga".negozio VALUES (17, 'via Ripoli, Roma', '09:47:00', '18:48:00', 6, true);
+INSERT INTO "Kalunga".negozio VALUES (4, 'Corso Buenos Aires 12, Milano', '09:00:00', '21:00:00', 1, false);
+INSERT INTO "Kalunga".negozio VALUES (18, 'Viale Cavriga 23, Malpensa', '06:10:00', '18:10:00', 17, true);
 
 
 --
 -- Data for Name: prodotto; Type: TABLE DATA; Schema: Kalunga; Owner: -
 --
 
-INSERT INTO "Kalunga".prodotto VALUES (1, 'Pizza Margherita', 'Pizza con pomodoro e mozzarella');
 INSERT INTO "Kalunga".prodotto VALUES (2, 'Birra', 'Birra artigianale 33cl');
 INSERT INTO "Kalunga".prodotto VALUES (3, 'Acqua', 'Bottiglia di acqua naturale 50cl');
 INSERT INTO "Kalunga".prodotto VALUES (5, 'Pizza Diavola', 'Pizza con salame piccante e mozzarella');
@@ -898,9 +922,14 @@ INSERT INTO "Kalunga".prodotto VALUES (18, 'Prosciutto Crudo', 'Prosciutto stagi
 INSERT INTO "Kalunga".prodotto VALUES (19, 'Insalata Mista', NULL);
 INSERT INTO "Kalunga".prodotto VALUES (20, 'Yogurt Bianco', 'Yogurt naturale intero 125g');
 INSERT INTO "Kalunga".prodotto VALUES (21, 'Tè Freddo Limone', 'Bottiglia di tè freddo al limone 500ml');
-INSERT INTO "Kalunga".prodotto VALUES (22, 'Cioccolato Fondente', NULL);
 INSERT INTO "Kalunga".prodotto VALUES (23, 'Patatine Chips', 'Confezione patatine croccanti 50g');
 INSERT INTO "Kalunga".prodotto VALUES (4, 'Pizza 4 Formaggi', 'Pizza con formaggi');
+INSERT INTO "Kalunga".prodotto VALUES (24, 'TV 47 pollici', 'Full Hd');
+INSERT INTO "Kalunga".prodotto VALUES (22, 'Cioccolato Fondente', 'Milka');
+INSERT INTO "Kalunga".prodotto VALUES (26, 'Sheet', '160x190');
+INSERT INTO "Kalunga".prodotto VALUES (29, 'Door', 'Bianca 90x120');
+INSERT INTO "Kalunga".prodotto VALUES (1, 'Pizza Margherita XL', 'Pizza con pomodoro o mozzarella');
+INSERT INTO "Kalunga".prodotto VALUES (30, 'Laptop 22', 'Snapdragon 18');
 
 
 --
@@ -957,6 +986,7 @@ INSERT INTO "Kalunga".prodotto_negozio VALUES (4, 18, 2.16);
 INSERT INTO "Kalunga".prodotto_negozio VALUES (4, 8, 3.88);
 INSERT INTO "Kalunga".prodotto_negozio VALUES (16, 6, 2.00);
 INSERT INTO "Kalunga".prodotto_negozio VALUES (16, 3, 1.50);
+INSERT INTO "Kalunga".prodotto_negozio VALUES (16, 24, 459.00);
 
 
 --
@@ -985,6 +1015,29 @@ INSERT INTO "Kalunga".scontrino VALUES (19, '2025-07-10', 14, 14, 0, 0.00, 6);
 INSERT INTO "Kalunga".scontrino VALUES (20, '2025-07-10', 14, 14, 0, 2.04, 6);
 INSERT INTO "Kalunga".scontrino VALUES (21, '2025-07-10', 14, 4, 0, 13.00, 6);
 INSERT INTO "Kalunga".scontrino VALUES (22, '2025-07-10', 14, 5, 5, 1.90, 6);
+INSERT INTO "Kalunga".scontrino VALUES (26, '2025-07-10', NULL, 5, 0, 0.00, 3);
+INSERT INTO "Kalunga".scontrino VALUES (27, '2025-07-10', NULL, 5, 0, 0.00, 3);
+INSERT INTO "Kalunga".scontrino VALUES (28, '2025-07-10', NULL, 5, 0, 0.00, 3);
+INSERT INTO "Kalunga".scontrino VALUES (29, '2025-07-10', NULL, 5, 0, 0.00, 3);
+INSERT INTO "Kalunga".scontrino VALUES (30, '2025-07-10', NULL, 5, 0, 0.00, 3);
+INSERT INTO "Kalunga".scontrino VALUES (31, '2025-07-10', NULL, 5, 0, 0.00, 3);
+INSERT INTO "Kalunga".scontrino VALUES (32, '2025-07-10', NULL, 5, 0, 0.00, 3);
+INSERT INTO "Kalunga".scontrino VALUES (33, '2025-07-10', NULL, 5, 0, 0.00, 3);
+INSERT INTO "Kalunga".scontrino VALUES (34, '2025-07-10', NULL, 5, 0, 2.00, 3);
+INSERT INTO "Kalunga".scontrino VALUES (35, '2025-07-10', NULL, 4, 0, 2.10, 3);
+INSERT INTO "Kalunga".scontrino VALUES (36, '2025-07-10', NULL, 5, 0, 2.00, 3);
+INSERT INTO "Kalunga".scontrino VALUES (37, '2025-07-10', NULL, 4, 0, 2.10, 3);
+INSERT INTO "Kalunga".scontrino VALUES (38, '2025-07-10', NULL, 7, 0, 2250.00, 3);
+INSERT INTO "Kalunga".scontrino VALUES (39, '2025-07-10', NULL, 4, 0, 2.10, 3);
+INSERT INTO "Kalunga".scontrino VALUES (40, '2025-07-10', NULL, 5, 0, 21.00, 3);
+INSERT INTO "Kalunga".scontrino VALUES (41, '2025-07-10', NULL, 4, 0, 4.20, 10);
+INSERT INTO "Kalunga".scontrino VALUES (42, '2025-07-10', NULL, 4, 0, 52.50, 5);
+INSERT INTO "Kalunga".scontrino VALUES (43, '2025-07-10', NULL, 4, 0, 116.40, 5);
+INSERT INTO "Kalunga".scontrino VALUES (44, '2025-07-10', NULL, 5, 0, 50.00, 5);
+INSERT INTO "Kalunga".scontrino VALUES (46, '2025-07-10', NULL, 5, 0, 50.00, 5);
+INSERT INTO "Kalunga".scontrino VALUES (48, '2025-07-10', 13, 5, 0, 50.00, 5);
+INSERT INTO "Kalunga".scontrino VALUES (49, '2025-07-10', 13, 5, 5, 47.50, 5);
+INSERT INTO "Kalunga".scontrino VALUES (50, '2025-07-10', 5, 4, 5, 3156.50, 2);
 
 
 --
@@ -1012,6 +1065,30 @@ INSERT INTO "Kalunga".scontrino_prodotto VALUES (15, 2, 3.00, 3);
 INSERT INTO "Kalunga".scontrino_prodotto VALUES (20, 10, 1.02, 2);
 INSERT INTO "Kalunga".scontrino_prodotto VALUES (21, 1, 6.50, 2);
 INSERT INTO "Kalunga".scontrino_prodotto VALUES (22, 3, 2.00, 1);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (26, 3, 2.00, 2);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (27, 3, 2.00, 1);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (28, 3, 2.00, 1);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (29, 10, 1.05, 2);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (30, 10, 1.05, 2);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (31, 10, 1.05, 1);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (32, 3, 2.00, 2);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (33, 3, 2.00, 1);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (34, 3, 2.00, 1);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (35, 3, 2.10, 1);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (36, 3, 2.00, 1);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (37, 3, 2.10, 1);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (38, 3, 2.25, 1000);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (39, 3, 2.10, 1);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (40, 10, 1.05, 20);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (41, 3, 2.10, 2);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (42, 3, 2.10, 25);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (43, 8, 3.88, 30);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (48, 3, 2.00, 25);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (49, 3, 2.00, 25);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (50, 3, 2.10, 2);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (50, 2, 1.46, 5);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (50, 1, 6.50, 10);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (50, 14, 3.18, 1000);
 
 
 --
@@ -1027,19 +1104,20 @@ INSERT INTO "Kalunga".storico_tessere VALUES (2, 19, 250, '2025-07-05', 10, 'chi
 --
 
 INSERT INTO "Kalunga".tessera VALUES (6, 0, '2025-06-10', 5, 3);
-INSERT INTO "Kalunga".tessera VALUES (13, 50, '2025-07-01', 4, 5);
 INSERT INTO "Kalunga".tessera VALUES (17, 310, '2025-07-05', 13, 9);
 INSERT INTO "Kalunga".tessera VALUES (19, 250, '2025-07-05', 10, 8);
 INSERT INTO "Kalunga".tessera VALUES (15, 20, '2025-07-03', 7, 7);
-INSERT INTO "Kalunga".tessera VALUES (5, 667, '2025-06-01', 4, 2);
 INSERT INTO "Kalunga".tessera VALUES (14, 16, '2025-07-02', 5, 6);
+INSERT INTO "Kalunga".tessera VALUES (13, 47, '2025-07-01', 4, 5);
+INSERT INTO "Kalunga".tessera VALUES (20, 0, '2025-07-10', 11, 17);
+INSERT INTO "Kalunga".tessera VALUES (5, 3723, '2025-06-01', 4, 2);
+INSERT INTO "Kalunga".tessera VALUES (21, 0, '2025-07-10', 7, 18);
 
 
 --
 -- Data for Name: utente; Type: TABLE DATA; Schema: Kalunga; Owner: -
 --
 
-INSERT INTO "Kalunga".utente VALUES (1, 'Mario', 'Rossi', 'mario.rossi@mail.com', 'password123', 'gestore', 'MRRSSI80A01F205X');
 INSERT INTO "Kalunga".utente VALUES (4, 'Laura', 'Neri', 'laura.neri@mail.com', 'password123', 'gestore', 'LRNRI95D01F205X');
 INSERT INTO "Kalunga".utente VALUES (5, 'Andrea', 'Gallo', 'andrea.gallo@mail.com', 'password123', 'gestore', 'NDGLL90C01F205X');
 INSERT INTO "Kalunga".utente VALUES (6, 'Sara', 'Ferri', 'sara.ferri@mail.com', 'password123', 'gestore', 'SRFRR95D01F205X');
@@ -1052,36 +1130,40 @@ INSERT INTO "Kalunga".utente VALUES (12, 'Marta', 'Vitali', 'marta.vitali@mail.c
 INSERT INTO "Kalunga".utente VALUES (13, 'Giorgio', 'Russo', 'giorgio.russo@mail.com', 'password123', 'cliente', 'GRGRSS97M01F205X');
 INSERT INTO "Kalunga".utente VALUES (14, 'Alessia', 'Marino', 'alessia.marino@mail.com', 'password123', 'cliente', 'LSMRNN98N01F205X');
 INSERT INTO "Kalunga".utente VALUES (15, 'Davide', 'Greco', 'davide.greco@mail.com', 'password123', 'cliente', 'DVDGRC99P01F205X');
-INSERT INTO "Kalunga".utente VALUES (2, 'Luca', 'Bianchi', 'luca.bianchi@mail.com', 'password1234', 'cliente', 'LCBNCH85B01F205X');
 INSERT INTO "Kalunga".utente VALUES (3, 'Anna', 'Verdi', 'anna.verdi@mail.com', 'asdasd123', 'cliente', 'ANVRDI90C01F205X');
+INSERT INTO "Kalunga".utente VALUES (16, 'Cintya', 'Flores', 'cintya.flore@mail.com', '$2y$12$rPtWf3fNlx.b3w5cl1fTvOZF0yIO9Rf2BGH.IDu49kzQYCUeZYZRq', 'gestore', 'CNTFLR84F12T123A');
+INSERT INTO "Kalunga".utente VALUES (17, 'robb', 'dell', 'rob.dll@mail.com', '$2y$12$rYX9XGcqGg4PU.40zbJ6hexrPNMrICYQnp3CpnhOIQffVak0hXpfK', 'gestore', 'DLLRRT87H09F704F');
+INSERT INTO "Kalunga".utente VALUES (2, 'Luca', 'Bianchi', 'luca.bianchi@mail.com', 'asdasd123', 'cliente', 'LCBNCH85B01F205X');
+INSERT INTO "Kalunga".utente VALUES (1, 'Mario', 'Rosso', 'mario.rossi@mail.com', 'password123', 'gestore', 'MRRSSI80A01F205X');
+INSERT INTO "Kalunga".utente VALUES (18, 'arian', 'aliabado', 'arian.aliabadi@mail.com', '$2y$12$/wndBteM7aWgj2V/HhGIROYleV1SIU7cfJKc/drFi7xsdODKt6C4S', 'cliente', 'ASDASD12S12A123D');
 
 
 --
 -- Name: approvvigionamento_id_seq; Type: SEQUENCE SET; Schema: Kalunga; Owner: -
 --
 
-SELECT pg_catalog.setval('"Kalunga".approvvigionamento_id_seq', 54, true);
+SELECT pg_catalog.setval('"Kalunga".approvvigionamento_id_seq', 81, true);
 
 
 --
 -- Name: negozio_id_seq; Type: SEQUENCE SET; Schema: Kalunga; Owner: -
 --
 
-SELECT pg_catalog.setval('"Kalunga".negozio_id_seq', 16, true);
+SELECT pg_catalog.setval('"Kalunga".negozio_id_seq', 18, true);
 
 
 --
 -- Name: prodotto_id_seq; Type: SEQUENCE SET; Schema: Kalunga; Owner: -
 --
 
-SELECT pg_catalog.setval('"Kalunga".prodotto_id_seq', 23, true);
+SELECT pg_catalog.setval('"Kalunga".prodotto_id_seq', 30, true);
 
 
 --
 -- Name: scontrino_id_seq; Type: SEQUENCE SET; Schema: Kalunga; Owner: -
 --
 
-SELECT pg_catalog.setval('"Kalunga".scontrino_id_seq', 23, true);
+SELECT pg_catalog.setval('"Kalunga".scontrino_id_seq', 50, true);
 
 
 --
@@ -1095,14 +1177,14 @@ SELECT pg_catalog.setval('"Kalunga".storico_tessere_id_seq', 2, true);
 -- Name: tessera_id_seq; Type: SEQUENCE SET; Schema: Kalunga; Owner: -
 --
 
-SELECT pg_catalog.setval('"Kalunga".tessera_id_seq', 19, true);
+SELECT pg_catalog.setval('"Kalunga".tessera_id_seq', 21, true);
 
 
 --
 -- Name: utente_id_seq; Type: SEQUENCE SET; Schema: Kalunga; Owner: -
 --
 
-SELECT pg_catalog.setval('"Kalunga".utente_id_seq', 15, true);
+SELECT pg_catalog.setval('"Kalunga".utente_id_seq', 18, true);
 
 
 --
