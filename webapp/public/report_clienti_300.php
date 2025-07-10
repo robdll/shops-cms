@@ -6,7 +6,7 @@ include('../includes/db.php');
 
 $res = pg_query($conn,
     'SELECT tessera_id, saldo_punti, nome, cognome, codice_fiscale
-     FROM "Kalunga".clienti_con_piu_di_300_punti
+     FROM clienti_con_piu_di_300_punti
      ORDER BY saldo_punti DESC');
 ?>
 <?php include('header.php') ?>

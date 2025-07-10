@@ -4,23 +4,23 @@ include('../includes/check-auth.php');
 include('../includes/check-gestore.php');
 include('../includes/db.php');
 
-$fornitori = pg_query($conn, 'SELECT partita_iva, indirizzo FROM "Kalunga".fornitore ORDER BY partita_iva');
+$fornitori = pg_query($conn, 'SELECT partita_iva, indirizzo FROM fornitore ORDER BY partita_iva');
 
 $filtra_fornitore = isset($_GET['fornitore']) ? $_GET['fornitore'] : '';
 
 if ($filtra_fornitore !== '' && $filtra_fornitore !== 'tutti') {
     $res = pg_query_params($conn,
         'SELECT o.id, o.data_consegna, o.negozio, o.fornitore, p.nome AS prodotto, o.quantita, o.prezzo_unitario
-         FROM "Kalunga".approvvigionamento o
-         JOIN "Kalunga".prodotto p ON p.id = o.prodotto
+         FROM approvvigionamento o
+         JOIN prodotto p ON p.id = o.prodotto
          WHERE o.fornitore = $1
          ORDER BY o.data_consegna DESC',
         [$filtra_fornitore]);
 } else {
     $res = pg_query($conn,
         'SELECT o.id, o.data_consegna, o.negozio, o.fornitore, p.nome AS prodotto, o.quantita, o.prezzo_unitario
-         FROM "Kalunga".approvvigionamento o
-         JOIN "Kalunga".prodotto p ON p.id = o.prodotto
+         FROM approvvigionamento o
+         JOIN prodotto p ON p.id = o.prodotto
          ORDER BY o.data_consegna DESC');
 }
 ?>

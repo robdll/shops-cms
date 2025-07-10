@@ -6,7 +6,7 @@ include('../includes/db.php');
 
 $messaggio = $_GET['msg'] ?? '';
 
-$negozi = pg_query($conn, 'SELECT id, indirizzo FROM "Kalunga".negozio WHERE eliminato = FALSE ORDER BY id');
+$negozi = pg_query($conn, 'SELECT id, indirizzo FROM negozio WHERE eliminato = FALSE ORDER BY id');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['negozio'])) {
     $negozio_id = (int)$_POST['negozio'];
@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['negozio'])) {
         $quantita = (int)$_POST['quantita'][$i];
         if ($quantita > 0) {
             pg_query_params($conn,
-                'INSERT INTO "Kalunga".approvvigionamento (negozio, prodotto, quantita, data_consegna)
+                'INSERT INTO approvvigionamento (negozio, prodotto, quantita, data_consegna)
                  VALUES ($1, $2, $3, $4)',
                 [$negozio_id, $prodotto_id, $quantita, $data]);
         }
@@ -31,14 +31,14 @@ if (isset($_GET['negozio'])) {
     $negozio_id = (int)$_GET['negozio'];
     $storico_res = pg_query_params($conn,
         'SELECT a.data_consegna, p.nome, a.quantita, a.prezzo_unitario
-        FROM "Kalunga".approvvigionamento a
-        JOIN "Kalunga".prodotto p ON p.id = a.prodotto
+        FROM approvvigionamento a
+        JOIN prodotto p ON p.id = a.prodotto
         WHERE a.negozio = $1
         ORDER BY a.data_consegna DESC', [$negozio_id]);
     $storico = pg_fetch_all($storico_res) ?: [];
 }
 
-$prodotti = pg_query($conn, 'SELECT id, nome FROM "Kalunga".prodotto ORDER BY nome');
+$prodotti = pg_query($conn, 'SELECT id, nome FROM prodotto ORDER BY nome');
 ?>
 <?php include('header.php') ?>
 

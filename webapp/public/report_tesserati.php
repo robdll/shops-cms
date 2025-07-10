@@ -4,21 +4,21 @@ include('../includes/check-auth.php');
 include('../includes/check-gestore.php');
 include('../includes/db.php');
 
-$negozi = pg_query($conn, 'SELECT id, indirizzo FROM "Kalunga".negozio WHERE eliminato = FALSE ORDER BY id');
+$negozi = pg_query($conn, 'SELECT id, indirizzo FROM negozio WHERE eliminato = FALSE ORDER BY id');
 
 $filtra_negozio = isset($_GET['negozio']) ? (int)$_GET['negozio'] : 0;
 
 if ($filtra_negozio > 0) {
     $res = pg_query_params($conn,
         'SELECT t.tessera_id, t.data_rilascio, t.nome, t.cognome, t.codice_fiscale, t.negozio
-         FROM "Kalunga".lista_tesserati_negozio t
+         FROM lista_tesserati_negozio t
          WHERE t.negozio = $1
          ORDER BY t.data_rilascio DESC',
         [$filtra_negozio]);
 } else {
     $res = pg_query($conn,
         'SELECT t.tessera_id, t.data_rilascio, t.nome, t.cognome, t.codice_fiscale, t.negozio
-         FROM "Kalunga".lista_tesserati_negozio t
+         FROM lista_tesserati_negozio t
          ORDER BY t.data_rilascio DESC');
 }
 ?>
