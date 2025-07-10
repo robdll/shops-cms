@@ -45,6 +45,14 @@ $tipo = $_SESSION['tipo'];
   <div class="col-md-4">
     <div class="card mb-4 shadow">
       <div class="card-body">
+        <h5 class="card-title">Gestisci Negozi</h5>
+        <a href="gestione-negozio.php" class="btn btn-primary">Vai alla Lista Negozi</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card mb-4 shadow">
+      <div class="card-body">
         <h5 class="card-title">Gestisci Prodotti</h5>
         <a href="compra.php" class="btn btn-primary">Vai al Catalogo</a>
       </div>
@@ -58,6 +66,8 @@ $tipo = $_SESSION['tipo'];
       </div>
     </div>
   </div>
+</div>
+<div class="row">
   <div class="col-md-4">
     <div class="card mb-4 shadow">
       <div class="card-body">
