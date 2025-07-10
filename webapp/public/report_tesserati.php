@@ -61,10 +61,11 @@ if ($filtra_negozio > 0) {
         <td><?= htmlspecialchars($r['nome']) ?></td>
         <td><?= htmlspecialchars($r['cognome']) ?></td>
         <td><?= htmlspecialchars($r['codice_fiscale']) ?></td>
-        <td><?= htmlspecialchars($r['negozio']) ?></td>
+        <td><span class="badge bg-primary"><?= htmlspecialchars($r['negozio']) ?></span></td>
       </tr>
     <?php } ?>
   </tbody>
 </table>
+
 
 <?php include('footer.php') ?>
