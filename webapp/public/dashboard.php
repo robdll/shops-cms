@@ -23,4 +23,5 @@ $tipo = $_SESSION['tipo'];
 <?php if ($tipo === 'gestore') { ?>
     <p><a href="report.php">Visualizza report</a></p>
     <p><a href="fornitore.php">Gestisci fornitori</a></p>
+    <p><a href="approvvigionamento.php">Approvvigionamenti</a></p>
 <?php } ?>
