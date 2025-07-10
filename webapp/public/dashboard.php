@@ -16,3 +16,6 @@ $tipo = $_SESSION['tipo'];
 <p><a href="modifica-password.php">Modifica password</a></p>
 <p><a href="negozio.php">Negozi</a></p>
 
+<?php if ($tipo === 'gestore') { ?>
+    <p><a href="report.php">Visualizza report</a></p>
+<?php } ?>
