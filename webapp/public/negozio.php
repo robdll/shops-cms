@@ -16,7 +16,7 @@ $res = pg_query_params($conn,
      WHERE u.email = $1",
     [$email]);
 $row = pg_fetch_assoc($res);
-$punti = $row['saldo_punti'] ?? 0;
+$punti = $row['saldo_punti'] ?? null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['inserisci_negozio'])) {
@@ -181,23 +181,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php } ?>
       </tbody>
     </table>
-    <div class="d-flex justify-content-between align-items-center mt-3">
-      <div class="d-flex align-items-center">
-        <label for="sconto" class="form-label me-2 mb-0">Seleziona sconto:</label>
-        <select name="sconto" id="sconto" class="form-select w-auto">
-          <option value="0">Nessuno</option>
-          <?php if ($punti >= 100): ?>
-            <option value="5">5% (100+ punti)</option>
-          <?php endif; ?>
-          <?php if ($punti >= 200): ?>
-            <option value="15">15% (200+ punti)</option>
-          <?php endif; ?>
-          <?php if ($punti >= 300): ?>
-            <option value="30">30% (300+ punti)</option>
-          <?php endif; ?>
-        </select>
+    <div class="d-flex align-items-center mt-3">
+      <?php if ($punti !== null): ?>
+        <div class="d-flex align-items-center">
+          <label for="sconto" class="form-label me-2 mb-0">Seleziona sconto:</label>
+          <select name="sconto" id="sconto" class="form-select w-auto">
+            <option value="0">Nessuno</option>
+            <?php if ($punti >= 100): ?>
+              <option value="5">5% (100+ punti)</option>
+            <?php endif; ?>
+            <?php if ($punti >= 200): ?>
+              <option value="15">15% (200+ punti)</option>
+            <?php endif; ?>
+            <?php if ($punti >= 300): ?>
+              <option value="30">30% (300+ punti)</option>
+            <?php endif; ?>
+          </select>
+        </div>
+      <?php endif; ?>
+      <div class="ms-auto">
+        <button type="submit" class="btn btn-success">Acquista</button>
       </div>
-      <button type="submit" class="btn btn-success">Acquista</button>
     </div>
 
   </form>
