@@ -1,10 +1,8 @@
 <?php
 session_start();
-if (!isset($_SESSION['email'])) {
-    header('Location: index.php');
-    exit;
-}
 
+
+include('../includes/check-auth.php');
 include('../includes/db.php');
 
 $email = $_SESSION['email'];

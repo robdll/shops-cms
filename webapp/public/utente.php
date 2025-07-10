@@ -1,16 +1,10 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['email'])) {
-    header('Location: index.php');
-    exit;
-}
+echo "<pre>SESSION: "; print_r($_SESSION); echo "</pre>";
 
-if ($_SESSION['tipo'] !== 'gestore') {
-    header('Location: dashboard.php');
-    exit;
-}
-
+include('../includes/check-auth.php');
+include('../includes/check-gestore.php');
 include('../includes/db.php');
 
 $messaggio = $_GET['msg'] ?? '';
@@ -76,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <th>Nome</th>
         <th>Cognome</th>
         <th>Codice Fiscale</th>
+        <th>Email</th>
         <th>ID Tessera</th>
         <th>Azioni</th>
       </tr>
@@ -83,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <tbody>
       <?php
       $res = pg_query($conn, 
-          "SELECT u.id, u.nome, u.cognome, u.codice_fiscale, t.id AS tessera_id
+          "SELECT u.id, u.nome, u.cognome, u.codice_fiscale, u.email, t.id AS tessera_id
            FROM utente u
            LEFT JOIN tessera t ON u.id = t.utente
            ORDER BY u.id");
@@ -93,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <td><?= htmlspecialchars($r['nome']) ?></td>
           <td><?= htmlspecialchars($r['cognome']) ?></td>
           <td><?= htmlspecialchars($r['codice_fiscale']) ?></td>
+          <td><?= htmlspecialchars($r['email']) ?></td>
           <td><?= htmlspecialchars($r['tessera_id'] ?? '') ?></td>
           <td>
             <a href="utenti.php?id=<?= $r['id'] ?>" class="btn btn-sm btn-primary">Gestisci</a>

@@ -1,10 +1,8 @@
 <?php
 session_start();
-if (!isset($_SESSION['email']) || $_SESSION['tipo'] !== 'gestore') {
-    header('Location: login.php');
-    exit;
-}
 
+include('../includes/check-auth.php');
+include('../includes/check-gestore.php');
 include('../includes/db.php');
 
 $result = pg_query($conn, "SELECT * FROM clienti_con_piu_di_300_punti ORDER BY saldo_punti DESC");

@@ -1,9 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['email']) || $_SESSION['tipo'] !== 'gestore') {
-    header('Location: login.php');
-    exit;
-}
+include('../includes/check-auth.php');
+include('../includes/check-gestore.php');
 ?>
 
 <h2>Report gestore</h2>

@@ -1,15 +1,8 @@
 <?php
 session_start();
-if (!isset($_SESSION['email'])) {
-    header('Location: index.php');
-    exit;
-}
 
-if ($_SESSION['tipo'] !== 'gestore') {
-    header('Location: dashboard.php');
-    exit;
-}
-
+include('../includes/check-auth.php');
+include('../includes/check-gestore.php');
 include('../includes/db.php');
 
 // gestione inserimento nuovo fornitore
