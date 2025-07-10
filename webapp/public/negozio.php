@@ -43,6 +43,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $tipo === 'gestore') {
             "UPDATE negozio SET eliminato=true WHERE id=$1",
             [$negozio_id]);
     }
+
+    if (isset($_POST['aggiungi_prodotto'])) {
+        $negozio_id = intval($_POST['negozio_id']);
+        $prodotto = intval($_POST['prodotto']);
+        $prezzo = floatval($_POST['prezzo']);
+        pg_query_params($conn,
+            "INSERT INTO prodotto_negozio (negozio, prodotto, prezzo_vendita)
+             VALUES ($1, $2, $3)",
+            [$negozio_id, $prodotto, $prezzo]);
+    }
+
+    if (isset($_POST['rimuovi_prodotto'])) {
+        $negozio_id = intval($_POST['negozio_id']);
+        $prodotto_rimuovi = intval($_POST['prodotto_rimuovi']);
+        pg_query_params($conn,
+            "DELETE FROM prodotto_negozio WHERE negozio=$1 AND prodotto=$2",
+            [$negozio_id, $prodotto_rimuovi]);
+    }
 }
 
 // se non è stato selezionato un negozio, mostra lista
@@ -116,6 +134,52 @@ $prodotti = pg_query_params($conn,
         <input type="time" name="chiusura" value="<?php echo htmlspecialchars($negozio['orario_chiusura']) ?>" required>
         <button type="submit" name="modifica_negozio">Salva modifiche</button>
     </form>
+
+    <h3>Aggiungi prodotto a questo negozio</h3>
+    <form method="POST">
+        <input type="hidden" name="negozio_id" value="<?php echo $negozio_id ?>">
+        <select name="prodotto" required>
+            <?php
+            $all = pg_query_params($conn, 
+                "SELECT p.id, p.nome
+                 FROM prodotto p
+                 WHERE NOT EXISTS (
+                     SELECT 1 FROM prodotto_negozio pn
+                     WHERE pn.prodotto = p.id AND pn.negozio = $1
+                 )
+                 ORDER BY p.nome",
+                [$negozio_id]
+            );
+            while ($r = pg_fetch_assoc($all)) {
+                echo '<option value="'.htmlspecialchars($r['id']).'">'.htmlspecialchars($r['nome']).'</option>';
+            }
+            ?>
+        </select>
+        <input type="number" step="0.01" name="prezzo" placeholder="Prezzo vendita" required>
+        <button type="submit" name="aggiungi_prodotto">Aggiungi prodotto</button>
+    </form>
+
+    <h3>Rimuovi prodotto da questo negozio</h3>
+    <form method="POST">
+        <input type="hidden" name="negozio_id" value="<?php echo $negozio_id ?>">
+        <select name="prodotto_rimuovi" required>
+            <?php
+            $associati = pg_query_params($conn, 
+                "SELECT p.id, p.nome
+                 FROM prodotto_negozio pn
+                 JOIN prodotto p ON p.id = pn.prodotto
+                 WHERE pn.negozio = $1
+                 ORDER BY p.nome",
+                [$negozio_id]
+            );
+            while ($r = pg_fetch_assoc($associati)) {
+                echo '<option value="'.htmlspecialchars($r['id']).'">'.htmlspecialchars($r['nome']).'</option>';
+            }
+            ?>
+        </select>
+        <button type="submit" name="rimuovi_prodotto">Rimuovi prodotto</button>
+    </form>
+
     <form method="POST" style="margin-top:10px;">
         <input type="hidden" name="negozio_id" value="<?php echo $negozio_id ?>">
         <button type="submit" name="elimina_negozio" onclick="return confirm('Sei sicuro di voler eliminare questo negozio?')">Elimina negozio</button>
