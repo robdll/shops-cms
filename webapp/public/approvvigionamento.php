@@ -1,153 +1,135 @@
 <?php
 session_start();
-
 include('../includes/check-auth.php');
 include('../includes/check-gestore.php');
 include('../includes/db.php');
 
-$approvv_fatti = [];
-$prodotti_non_approvv = [];
+$messaggio = $_GET['msg'] ?? '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['negozio_id'], $_POST['quantita'], $_POST['data_consegna'])) {
-    $negozio_id = intval($_POST['negozio_id']);
-    $data_consegna = $_POST['data_consegna'];
-    $approvv_fatti = [];
-    $prodotti_non_approvv = [];
+$negozi = pg_query($conn, 'SELECT id, indirizzo FROM "Kalunga".negozio WHERE eliminato = FALSE ORDER BY id');
 
-    foreach ($_POST['quantita'] as $pid => $qty) {
-        $qty = intval($qty);
-        if ($qty > 0) {
-            $res = @pg_query_params($conn,
-                "INSERT INTO \"Kalunga\".approvvigionamento (negozio, prodotto, data_consegna, quantita)
-                 VALUES ($1, $2, $3, $4)",
-                [$negozio_id, $pid, $data_consegna, $qty]);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['negozio'])) {
+    $negozio_id = (int)$_POST['negozio'];
+    $data = $_POST['data'];
 
-            if (!$res) {
-                $prodotti_non_approvv[] = $pid;
-            } else {
-                $id = pg_fetch_result(pg_query($conn,
-                    "SELECT currval(pg_get_serial_sequence('\"Kalunga\".approvvigionamento', 'id'))"), 0, 0);
-                $info = pg_query_params($conn,
-                    "SELECT a.id, a.fornitore, a.prezzo_unitario, a.quantita
-                     FROM \"Kalunga\".approvvigionamento a WHERE a.id = $1",
-                    [$id]);
-                $approvv_fatti[] = pg_fetch_assoc($info);
-            }
+    foreach ($_POST['prodotto'] as $i => $prodotto_id) {
+        $quantita = (int)$_POST['quantita'][$i];
+        if ($quantita > 0) {
+            pg_query_params($conn,
+                'INSERT INTO "Kalunga".approvvigionamento (negozio, prodotto, quantita, data_consegna)
+                 VALUES ($1, $2, $3, $4)',
+                [$negozio_id, $prodotto_id, $quantita, $data]);
         }
     }
 
-    $_SESSION['approvv_fatti'] = $approvv_fatti;
-    $_SESSION['prodotti_non_approvv'] = $prodotti_non_approvv;
-
-    header("Location: approvvigionamento.php?negozio=$negozio_id");
+    header("Location: approvvigionamento.php?negozio=$negozio_id&msg=Approvvigionamento effettuato con successo");
     exit;
 }
 
+$storico = [];
 if (isset($_GET['negozio'])) {
-    $approvv_fatti = $_SESSION['approvv_fatti'] ?? [];
-    $prodotti_non_approvv = $_SESSION['prodotti_non_approvv'] ?? [];
-    unset($_SESSION['approvv_fatti'], $_SESSION['prodotti_non_approvv']);
+    $negozio_id = (int)$_GET['negozio'];
+    $storico_res = pg_query_params($conn,
+        'SELECT a.data_consegna, p.nome, a.quantita, a.prezzo_unitario
+        FROM "Kalunga".approvvigionamento a
+        JOIN "Kalunga".prodotto p ON p.id = a.prodotto
+        WHERE a.negozio = $1
+        ORDER BY a.data_consegna DESC', [$negozio_id]);
+    $storico = pg_fetch_all($storico_res) ?: [];
 }
 
-if (!isset($_GET['negozio'])) {
-    $result = pg_query($conn, "SELECT id, indirizzo FROM \"Kalunga\".negozio WHERE eliminato = false ORDER BY id");
-    ?>
-    <h2>Seleziona un negozio per effettuare approvvigionamento</h2>
-    <table border="1">
-        <tr><th>ID</th><th>Indirizzo</th></tr>
-        <?php while ($row = pg_fetch_assoc($result)) { ?>
-            <tr onclick="window.location='approvvigionamento.php?negozio=<?php echo urlencode($row['id']) ?>'">
-                <td><?php echo htmlspecialchars($row['id']) ?></td>
-                <td><?php echo htmlspecialchars($row['indirizzo']) ?></td>
-            </tr>
-        <?php } ?>
-    </table>
-    <style>tr:hover {background:#eee; cursor:pointer;}</style>
-    <p><a href="dashboard.php">Torna alla dashboard</a></p>
-    <?php
-    exit;
-}
-
-$negozio_id = intval($_GET['negozio']);
-$negozio = pg_query_params($conn,
-    "SELECT id, indirizzo FROM \"Kalunga\".negozio WHERE id=$1 AND eliminato = false",
-    [$negozio_id]);
-if (pg_num_rows($negozio) != 1) {
-    header("Location: approvvigionamento.php");
-    exit;
-}
-$negozio = pg_fetch_assoc($negozio);
-
-$storico = pg_query_params($conn,
-    "SELECT a.id, a.prodotto, p.nome AS prodotto_nome, a.fornitore, a.prezzo_unitario, a.quantita, a.data_consegna
-     FROM \"Kalunga\".approvvigionamento a
-     JOIN \"Kalunga\".prodotto p ON a.prodotto = p.id
-     WHERE a.negozio = $1
-     ORDER BY a.data_consegna DESC",
-    [$negozio_id]);
+$prodotti = pg_query($conn, 'SELECT id, nome FROM "Kalunga".prodotto ORDER BY nome');
 ?>
-<h2>Effettua approvvigionamento per negozio <?php echo htmlspecialchars($negozio['indirizzo']) ?></h2>
-<form method="POST">
-    <input type="hidden" name="negozio_id" value="<?php echo $negozio_id ?>">
-    <table border="1">
-        <tr><th>Prodotto</th><th>Quantità da ordinare</th></tr>
-        <?php
-        $prodotti = pg_query($conn, "SELECT id, nome FROM \"Kalunga\".prodotto ORDER BY nome");
-        while ($p = pg_fetch_assoc($prodotti)) { ?>
-            <tr>
-                <td><?php echo htmlspecialchars($p['nome']) ?></td>
-                <td><input type="number" name="quantita[<?php echo $p['id'] ?>]" value="0" min="0"></td>
-            </tr>
-        <?php } ?>
-    </table>
-    <label>Data consegna:</label>
-    <input type="date" name="data_consegna" value="<?php echo date('Y-m-d') ?>" required>
-    <button type="submit">Effettua approvvigionamento</button>
+<?php include('header.php') ?>
+
+<?php if ($messaggio): ?>
+  <div class="alert alert-success"><?= htmlspecialchars($messaggio) ?></div>
+<?php endif; ?>
+
+<h2>Approvvigionamento</h2>
+<form method="GET" class="mb-4">
+  <div class="row">
+    <div class="col-md-6">
+      <label for="negozio" class="form-label">Seleziona Negozio</label>
+      <select class="form-select" id="negozio" name="negozio" required onchange="this.form.submit()">
+        <option value="">-- Scegli --</option>
+        <?php while ($n = pg_fetch_assoc($negozi)): ?>
+          <option value="<?= $n['id'] ?>" <?= (isset($_GET['negozio']) && $_GET['negozio'] == $n['id']) ? 'selected' : '' ?>>
+            <?= htmlspecialchars($n['indirizzo']) ?> (ID <?= $n['id'] ?>)
+          </option>
+        <?php endwhile; ?>
+      </select>
+    </div>
+  </div>
 </form>
 
-<?php if (count($prodotti_non_approvv) > 0) { ?>
-    <p style="color:red;">
-        I seguenti prodotti non possono essere ordinati a causa di mancanza di disponibilità:
-        <?php
-        $nomi = [];
-        foreach ($prodotti_non_approvv as $pid) {
-            $n = pg_query_params($conn, "SELECT nome FROM \"Kalunga\".prodotto WHERE id = $1", [$pid]);
-            $nomi[] = pg_fetch_result($n, 0, 0);
-        }
-        echo htmlspecialchars(implode(', ', $nomi));
-        ?>
-    </p>
-<?php } ?>
-
-<?php if (count($approvv_fatti) > 0) { ?>
-    <h3>Riepilogo Approvvigionamento effettuato:</h3>
-    <table border="1">
-        <tr><th>ID</th><th>Fornitore</th><th>Prezzo unitario</th><th>Quantità</th></tr>
-        <?php foreach ($approvv_fatti as $app) { ?>
-            <tr>
-                <td><?php echo htmlspecialchars($app['id']) ?></td>
-                <td><?php echo htmlspecialchars($app['fornitore']) ?></td>
-                <td><?php echo htmlspecialchars($app['prezzo_unitario']) ?></td>
-                <td><?php echo htmlspecialchars($app['quantita']) ?></td>
-            </tr>
-        <?php } ?>
-    </table>
-<?php } ?>
-
-<h3>Storico approvvigionamenti di questo negozio</h3>
-<table border="1">
-    <tr><th>ID</th><th>Data</th><th>Prodotto</th><th>Fornitore</th><th>Prezzo unitario</th><th>Quantità</th></tr>
-    <?php while ($row = pg_fetch_assoc($storico)) { ?>
+<?php if (isset($_GET['negozio'])): ?>
+  <h3>Storico Approvvigionamenti</h3>
+  <table class="table table-hover mb-5">
+    <thead>
+      <tr>
+        <th>Data Consegna</th>
+        <th>Prodotto</th>
+        <th>Quantità</th>
+        <th>Prezzo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach ($storico as $s): ?>
         <tr>
-            <td><?php echo htmlspecialchars($row['id']) ?></td>
-            <td><?php echo htmlspecialchars($row['data_consegna']) ?></td>
-            <td><?php echo htmlspecialchars($row['prodotto_nome']) ?></td>
-            <td><?php echo htmlspecialchars($row['fornitore']) ?></td>
-            <td><?php echo htmlspecialchars($row['prezzo_unitario']) ?></td>
-            <td><?php echo htmlspecialchars($row['quantita']) ?></td>
-        </tr>
-    <?php } ?>
-</table>
+        <td><?= htmlspecialchars($s['data_consegna']) ?></td>
+        <td><?= htmlspecialchars($s['nome']) ?></td>
+        <td><?= htmlspecialchars($s['quantita']) ?></td>
+        <td><?= htmlspecialchars($s['prezzo_unitario']) ?></td>
 
-<p><a href="approvvigionamento.php">Torna alla lista negozi</a></p>
-<p><a href="dashboard.php">Torna alla dashboard</a></p>
+        </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+
+  <h3>Effettua Nuovo Approvvigionamento</h3>
+  <form method="POST" id="approvvForm">
+    <input type="hidden" name="negozio" value="<?= htmlspecialchars($_GET['negozio']) ?>">
+
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label for="data" class="form-label">Data Consegna</label>
+            <input type="date" class="form-control" id="data" name="data" required value="<?= date('Y-m-d') ?>">
+        </div>
+    </div>
+
+    <div id="prodottiContainer">
+      <div class="row mb-3 prodottoRow">
+        <div class="col-md-5">
+          <label class="form-label">Prodotto</label>
+          <select class="form-select" name="prodotto[]">
+            <?php
+                pg_result_seek($prodotti, 0);
+                while ($p = pg_fetch_assoc($prodotti)): ?>
+                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nome']) ?> (ID <?= $p['id'] ?>)</option>
+            <?php endwhile; ?>
+          </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Quantità</label>
+            <input type="number" class="form-control" name="quantita[]" min="1" required>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-secondary mb-3" onclick="aggiungiProdotto()">+ Aggiungi Prodotto</button>
+    <br>
+    <button type="submit" class="btn btn-success">Conferma Approvvigionamento</button>
+  </form>
+
+  <script>
+    function aggiungiProdotto() {
+      let container = document.getElementById('prodottiContainer')
+      let nuovo = container.querySelector('.prodottoRow').cloneNode(true)
+      nuovo.querySelector('input').value = ''
+      container.appendChild(nuovo)
+    }
+  </script>
+<?php endif; ?>
+
+<?php include('footer.php') ?>
