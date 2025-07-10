@@ -38,6 +38,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             [$indirizzo, $apertura, $chiusura, $responsabile, $edit_id]);
         $messaggio = "Negozio ID $edit_id aggiornato con successo.";
     }
+
+    // aggiunta prodotto al negozio
+    if (isset($_POST['add_prodotto'])) {
+        $negozio_id = (int)$_POST['negozio_id'];
+        $prodotto_id = (int)$_POST['prodotto_id'];
+        $prezzo_vendita = $_POST['prezzo_vendita'];
+        pg_query_params($conn,
+            'INSERT INTO prodotto_negozio (negozio, prodotto, prezzo_vendita) VALUES ($1, $2, $3)',
+            [$negozio_id, $prodotto_id, $prezzo_vendita]);
+        header("Location: gestione-negozio.php?id=$negozio_id");
+        exit;
+    }
+
+    // elimina prodotto dal negozio
+    if (isset($_POST['delete_prodotto_id'])) {
+        $negozio_id = (int)$_POST['negozio_id'];
+        $prodotto_id = (int)$_POST['delete_prodotto_id'];
+        pg_query_params($conn,
+            'DELETE FROM prodotto_negozio WHERE negozio = $1 AND prodotto = $2',
+            [$negozio_id, $prodotto_id]);
+        header("Location: gestione-negozio.php?id=$negozio_id");
+        exit;
+    }
 }
 
 // carica lista responsabili
@@ -127,6 +150,26 @@ $responsabili = pg_query($conn, "SELECT id, nome, cognome FROM utente WHERE tipo
     $id = $_GET['id'];
     $q = pg_query_params($conn, "SELECT * FROM negozio WHERE id=$1", [$id]);
     $negozio = pg_fetch_assoc($q);
+
+    // carica prodotti presenti
+    $prodotti = pg_query_params($conn, 
+      'SELECT pn.prodotto, p.nome, pn.prezzo_vendita 
+       FROM prodotto_negozio pn
+       JOIN prodotto p ON p.id = pn.prodotto
+       WHERE pn.negozio = $1
+       ORDER BY p.nome', 
+      [$id]);
+
+    // carica prodotti NON ancora presenti
+    $prodotti_disponibili = pg_query_params($conn,
+      'SELECT p.id, p.nome 
+       FROM prodotto p 
+       WHERE NOT EXISTS (
+         SELECT 1 FROM prodotto_negozio pn
+         WHERE pn.prodotto = p.id AND pn.negozio = $1
+       )
+       ORDER BY p.nome', 
+      [$id]);
   ?>
   <h3 class="mt-5">Gestisci Negozio ID <?= htmlspecialchars($id) ?></h3>
   <form method="POST" class="mb-5">
@@ -165,6 +208,52 @@ $responsabili = pg_query($conn, "SELECT id, nome, cognome FROM utente WHERE tipo
     </div>
     <button type="submit" name="update" class="btn btn-warning">Salva Modifiche</button>
     <a href="gestione-negozio.php" class="btn btn-secondary">Indietro</a>
+  </form>
+
+  <h4 class="mt-5">Prodotti disponibili in questo negozio</h4>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Nome Prodotto</th>
+        <th>Prezzo Vendita (€)</th>
+        <th>Azioni</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php while ($r = pg_fetch_assoc($prodotti)): ?>
+        <tr>
+          <td><?= htmlspecialchars($r['nome']) ?></td>
+          <td><?= htmlspecialchars($r['prezzo_vendita']) ?></td>
+          <td>
+            <form method="post" class="d-inline">
+              <input type="hidden" name="negozio_id" value="<?= htmlspecialchars($id) ?>">
+              <input type="hidden" name="delete_prodotto_id" value="<?= htmlspecialchars($r['prodotto']) ?>">
+              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Sei sicuro?')">Elimina</button>
+            </form>
+          </td>
+        </tr>
+      <?php endwhile; ?>
+    </tbody>
+  </table>
+
+  <h4 class="mt-4">Aggiungi prodotto a questo negozio</h4>
+  <form method="post" class="mb-5">
+    <input type="hidden" name="negozio_id" value="<?= htmlspecialchars($id) ?>">
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label for="prodotto_id" class="form-label">Prodotto</label>
+        <select name="prodotto_id" class="form-select" required>
+          <?php while ($r = pg_fetch_assoc($prodotti_disponibili)): ?>
+            <option value="<?= htmlspecialchars($r['id']) ?>"><?= htmlspecialchars($r['nome']) ?></option>
+          <?php endwhile; ?>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label for="prezzo_vendita" class="form-label">Prezzo (€)</label>
+        <input type="number" step="0.01" name="prezzo_vendita" class="form-control" required>
+      </div>
+    </div>
+    <button type="submit" name="add_prodotto" class="btn btn-success">Aggiungi Prodotto</button>
   </form>
 <?php endif; ?>
 
