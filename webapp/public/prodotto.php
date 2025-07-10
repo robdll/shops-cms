@@ -1,9 +1,15 @@
 <?php
 session_start();
-if (!isset($_SESSION['email']) || $_SESSION['tipo'] !== 'gestore') {
+if (!isset($_SESSION['email'])) {
     header('Location: index.php');
     exit;
 }
+
+if (!$_SESSION['tipo'] !== 'gestore') {
+    header('Location: dashboard.php');
+    exit;
+}
+
 include('../includes/db.php');
 
 $messaggio = $_GET['msg'] ?? '';
