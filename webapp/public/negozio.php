@@ -112,6 +112,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <p><strong><?= htmlspecialchars($negozio['indirizzo']) ?></strong> 
      (<?= htmlspecialchars($negozio['orario_apertura']) ?> - <?= htmlspecialchars($negozio['orario_chiusura']) ?>)</p>
 
+  <?php if (isset($_GET['id'])): ?>
+    <p class="mt-4"><a href="negozio.php" class="btn btn-secondary">Torna alla Lista Negozi</a></p>
+  <?php endif; ?>
+
   <h4 class="mt-4">Acquista Prodotti</h4>
   <form action="scontrino.php" method="POST">
     <input type="hidden" name="negozio" value="<?= $id ?>">
@@ -152,7 +156,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php } ?>
       </tbody>
     </table>
-    <button type="submit" class="btn btn-success mt-3">Acquista</button>
+    <div class="text-end mt-3">
+      <button type="submit" class="btn btn-success">Acquista</button>
+    </div>
   </form>
 
   <?php if ($tipo === 'gestore'): ?>
@@ -198,7 +204,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
   <?php endif; ?>
 <?php endif; ?>
-
-<p class="mt-4"><a href="dashboard.php" class="btn btn-secondary">Torna alla dashboard</a></p>
 
 <?php include('footer.php') ?>
