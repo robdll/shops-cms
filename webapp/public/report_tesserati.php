@@ -9,7 +9,7 @@ include('../includes/db.php');
 
 if (!isset($_GET['negozio'])) {
     // Mostra lista negozi
-    $result = pg_query($conn, "SELECT id, indirizzo FROM \"Kalunga\".negozio ORDER BY id");
+    $result = pg_query($conn, "SELECT id, indirizzo FROM negozio ORDER BY id");
     ?>
     <h2>Lista tesserati per negozio</h2>
     <p>Seleziona un negozio per vedere i suoi tesserati:</p>
@@ -32,7 +32,7 @@ if (!isset($_GET['negozio'])) {
 $negozio = intval($_GET['negozio']);
 $query = "
     SELECT t.tessera_id, t.data_rilascio, t.nome, t.cognome, t.codice_fiscale
-    FROM \"Kalunga\".lista_tesserati_negozio t
+    FROM lista_tesserati_negozio t
     WHERE t.negozio = $1
     ORDER BY t.data_rilascio DESC";
 $result = pg_query_params($conn, $query, [$negozio]);

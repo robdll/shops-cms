@@ -9,7 +9,7 @@ include('../includes/db.php');
 
 if (!isset($_GET['fornitore'])) {
     // Mostra lista fornitori
-    $result = pg_query($conn, "SELECT partita_iva, indirizzo FROM \"Kalunga\".fornitore ORDER BY partita_iva");
+    $result = pg_query($conn, "SELECT partita_iva, indirizzo FROM fornitore ORDER BY partita_iva");
     ?>
     <h2>Storico ordini a fornitori</h2>
     <p>Seleziona un fornitore per vedere i suoi ordini:</p>
@@ -32,8 +32,8 @@ if (!isset($_GET['fornitore'])) {
 $fornitore = $_GET['fornitore'];
 $query = "
     SELECT a.prodotto, a.quantita, a.prezzo_unitario, a.data_consegna, n.indirizzo AS negozio
-    FROM \"Kalunga\".approvvigionamento a
-    JOIN \"Kalunga\".negozio n ON a.negozio = n.id
+    FROM approvvigionamento a
+    JOIN negozio n ON a.negozio = n.id
     WHERE a.fornitore = $1
     ORDER BY a.data_consegna DESC";
 $result = pg_query_params($conn, $query, [$fornitore]);
