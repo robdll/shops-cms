@@ -1,7 +1,12 @@
 <?php
 session_start();
-if (!isset($_SESSION['email']) || $_SESSION['tipo'] !== 'gestore') {
-    header('Location: login.php');
+if (!isset($_SESSION['email'])) {
+    header('Location: index.php');
+    exit;
+}
+
+if ($_SESSION['tipo'] !== 'gestore') {
+    header('Location: dashboard.php');
     exit;
 }
 

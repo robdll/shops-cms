@@ -5,7 +5,7 @@ if (!isset($_SESSION['email'])) {
     exit;
 }
 
-if (!$_SESSION['tipo'] !== 'gestore') {
+if ($_SESSION['tipo'] !== 'gestore') {
     header('Location: dashboard.php');
     exit;
 }

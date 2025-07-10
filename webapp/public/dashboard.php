@@ -46,7 +46,7 @@ $tipo = $_SESSION['tipo'];
     <div class="card mb-4 shadow">
       <div class="card-body">
         <h5 class="card-title">Gestisci Utenti</h5>
-        <a href="utenti.php" class="btn btn-primary">Vai ai Clienti</a>
+        <a href="utente.php" class="btn btn-primary">Vai ai Clienti</a>
       </div>
     </div>
   </div>
