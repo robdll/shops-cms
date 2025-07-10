@@ -136,6 +136,75 @@ $$;
 
 
 --
+-- Name: applica_sconto_scontrino(integer, integer); Type: FUNCTION; Schema: Kalunga; Owner: -
+--
+
+CREATE FUNCTION "Kalunga".applica_sconto_scontrino(scontrino_id integer, perc_sconto integer) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    tessera_id INT;
+    saldo INT;
+    punti_usati INT := 0;
+    punti_guadagnati INT := 0;
+    totale NUMERIC(10,2);
+    sconto_valore NUMERIC(10,2);
+BEGIN
+    -- recupera tessera e totale
+    SELECT s.tessera, s.totale_pagato INTO tessera_id, totale
+    FROM scontrino s
+    WHERE s.id = scontrino_id;
+
+    -- se non ha tessera esce (nessun punto, nessuno sconto)
+    IF tessera_id IS NULL THEN
+        UPDATE scontrino SET sconto_percentuale = 0 WHERE id = scontrino_id;
+        RETURN;
+    END IF;
+
+    SELECT saldo_punti INTO saldo FROM tessera WHERE id = tessera_id;
+
+    -- decide se può usare punti
+    IF perc_sconto = 30 AND saldo >= 300 THEN
+        punti_usati := 300;
+    ELSIF perc_sconto = 15 AND saldo >= 200 THEN
+        punti_usati := 200;
+    ELSIF perc_sconto = 5 AND saldo >= 100 THEN
+        punti_usati := 100;
+    ELSE
+        perc_sconto := 0;
+    END IF;
+
+    -- applica sconto solo se ha diritto
+    IF perc_sconto > 0 THEN
+        sconto_valore := totale * (perc_sconto / 100.0);
+        IF sconto_valore > 100 THEN
+            sconto_valore := 100;
+        END IF;
+        totale := totale - sconto_valore;
+
+        UPDATE scontrino
+        SET totale_pagato = totale,
+            sconto_percentuale = perc_sconto
+        WHERE id = scontrino_id;
+
+        -- scala punti usati
+        saldo := saldo - punti_usati;
+    ELSE
+        UPDATE scontrino SET sconto_percentuale = 0 WHERE id = scontrino_id;
+    END IF;
+
+    -- calcola e aggiunge sempre i punti guadagnati
+    punti_guadagnati := FLOOR(totale);
+    saldo := saldo + punti_guadagnati;
+
+    UPDATE tessera
+    SET saldo_punti = saldo
+    WHERE id = tessera_id;
+END;
+$$;
+
+
+--
 -- Name: check_coerenza_scontrino(); Type: FUNCTION; Schema: Kalunga; Owner: -
 --
 
@@ -302,72 +371,21 @@ $$;
 
 
 --
--- Name: effettua_approvvigionamento(); Type: FUNCTION; Schema: Kalunga; Owner: -
+-- Name: prevent_delete_fornitore_if_orders(); Type: FUNCTION; Schema: Kalunga; Owner: -
 --
 
-CREATE FUNCTION "Kalunga".effettua_approvvigionamento() RETURNS trigger
+CREATE FUNCTION "Kalunga".prevent_delete_fornitore_if_orders() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
-DECLARE
-    fornitore_id VARCHAR(20);
-    prezzo_unitario NUMERIC(10,2);
 BEGIN
-    -- cerca fornitore più economico con disponibilità sufficiente
-    SELECT f.fornitore, f.costo_unitario
-    INTO fornitore_id, prezzo_unitario
-    FROM fornitore_prodotto f
-    WHERE f.prodotto = NEW.prodotto
-      AND f.disponibilita >= NEW.quantita
-    ORDER BY f.costo_unitario ASC
-    LIMIT 1;
-
-    IF fornitore_id IS NULL THEN
-        RAISE EXCEPTION 'Nessun fornitore ha % pezzi disponibili per il prodotto %', NEW.quantita, NEW.prodotto;
-    END IF;
-
-    -- aggiorna NEW
-    NEW.fornitore := fornitore_id;
-    NEW.prezzo_unitario := prezzo_unitario;
-
-    RETURN NEW;
-END;
-$$;
-
-
---
--- Name: effettua_approvvigionamento(integer, integer, date, integer); Type: FUNCTION; Schema: Kalunga; Owner: -
---
-
-CREATE FUNCTION "Kalunga".effettua_approvvigionamento(prodotto_id integer, negozio_id integer, data_consegna date, quantita integer) RETURNS void
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-    fornitore_id VARCHAR(20);
-    prezzo_unitario NUMERIC(10,2);
-    approvvigionamento_id INT;
-BEGIN
-    -- cerca il fornitore più economico con abbastanza disponibilità
-    SELECT f.fornitore, f.costo_unitario
-    INTO fornitore_id, prezzo_unitario
-    FROM fornitore_prodotto f
-    WHERE f.prodotto = prodotto_id
-      AND f.disponibilita >= quantita
-    ORDER BY f.costo_unitario ASC
-    LIMIT 1;
-
-    -- se non trovato, solleva errore
-    IF fornitore_id IS NULL THEN
-        RAISE EXCEPTION 'Nessun fornitore ha % pezzi disponibili per il prodotto %', quantita, prodotto_id;
-    END IF;
-
-    -- inserisci approvvigionamento
-    INSERT INTO approvvigionamento(negozio, fornitore, data_consegna)
-    VALUES (negozio_id, fornitore_id, data_consegna)
-    RETURNING id INTO approvvigionamento_id;
-
-    -- inserisci dettaglio prodotto
-    INSERT INTO approvvigionamento_prodotto(approvvigionamento, prodotto, prezzo_unitario, quantita)
-    VALUES (approvvigionamento_id, prodotto_id, prezzo_unitario, quantita);
+  IF EXISTS (
+    SELECT 1
+    FROM approvvigionamento
+    WHERE approvvigionamento.fornitore = OLD.partita_iva
+  ) THEN
+    RAISE EXCEPTION 'Impossibile eliminare il fornitore: sono presenti ordini associati';
+  END IF;
+  RETURN OLD;
 END;
 $$;
 
@@ -390,17 +408,19 @@ BEGIN
         RAISE EXCEPTION 'Impossibile fare approvvigionamento: il negozio % è eliminato', NEW.negozio;
     END IF;
 
-    -- trova fornitore migliore
+    -- trova fornitore migliore ignorando quelli eliminati
     SELECT f.fornitore, f.costo_unitario
     INTO fornitore_id, prezzo_unitario
     FROM fornitore_prodotto f
+    JOIN fornitore fo ON f.fornitore = fo.id
     WHERE f.prodotto = NEW.prodotto
       AND f.disponibilita >= NEW.quantita
+      AND fo.eliminato = FALSE
     ORDER BY f.costo_unitario ASC
     LIMIT 1;
 
     IF fornitore_id IS NULL THEN
-        RAISE EXCEPTION 'Nessun fornitore ha % pezzi disponibili per il prodotto %', NEW.quantita, NEW.prodotto;
+        RAISE EXCEPTION 'Nessun fornitore valido ha % pezzi disponibili per il prodotto %', NEW.quantita, NEW.prodotto;
     END IF;
 
     -- completa NEW
@@ -506,7 +526,8 @@ CREATE VIEW "Kalunga".clienti_con_piu_di_300_punti AS
 
 CREATE TABLE "Kalunga".fornitore (
     partita_iva character varying(20) NOT NULL,
-    indirizzo text NOT NULL
+    indirizzo text NOT NULL,
+    eliminato boolean DEFAULT false
 );
 
 
@@ -815,13 +836,13 @@ INSERT INTO "Kalunga".approvvigionamento VALUES (3, 11, 'IT88899900011', '2025-0
 -- Data for Name: fornitore; Type: TABLE DATA; Schema: Kalunga; Owner: -
 --
 
-INSERT INTO "Kalunga".fornitore VALUES ('IT12345678901', 'Via Milano 1, Milano');
-INSERT INTO "Kalunga".fornitore VALUES ('IT98765432109', 'Via Roma 22, Torino');
-INSERT INTO "Kalunga".fornitore VALUES ('IT22233344455', 'Via Manzoni 10, Milano');
-INSERT INTO "Kalunga".fornitore VALUES ('IT55566677788', 'Corso Francia 18, Torino');
-INSERT INTO "Kalunga".fornitore VALUES ('IT88899900011', 'Piazza Repubblica 25, Firenze');
-INSERT INTO "Kalunga".fornitore VALUES ('IT11122233344', 'Via Toledo 5, Napoli');
-INSERT INTO "Kalunga".fornitore VALUES ('IT44455566677', 'Viale Regione Siciliana 120, Palermo');
+INSERT INTO "Kalunga".fornitore VALUES ('IT12345678901', 'Via Milano 1, Milano', false);
+INSERT INTO "Kalunga".fornitore VALUES ('IT98765432109', 'Via Roma 22, Torino', false);
+INSERT INTO "Kalunga".fornitore VALUES ('IT22233344455', 'Via Manzoni 10, Milano', false);
+INSERT INTO "Kalunga".fornitore VALUES ('IT55566677788', 'Corso Francia 18, Torino', false);
+INSERT INTO "Kalunga".fornitore VALUES ('IT88899900011', 'Piazza Repubblica 25, Firenze', false);
+INSERT INTO "Kalunga".fornitore VALUES ('IT11122233344', 'Via Toledo 5, Napoli', false);
+INSERT INTO "Kalunga".fornitore VALUES ('IT44455566677', 'Viale Regione Siciliana 120, Palermo', false);
 
 
 --
@@ -982,6 +1003,16 @@ INSERT INTO "Kalunga".prodotto_negozio VALUES (4, 8, 3.88);
 --
 
 INSERT INTO "Kalunga".scontrino VALUES (1, '2025-07-05', 15, 13, 5, 25.46, 7);
+INSERT INTO "Kalunga".scontrino VALUES (2, '2025-07-08', 5, 14, 0, 34.70, 2);
+INSERT INTO "Kalunga".scontrino VALUES (3, '2025-07-08', 5, 4, 0, 473.00, 2);
+INSERT INTO "Kalunga".scontrino VALUES (4, '2025-07-08', 5, 7, 0, 680.00, 2);
+INSERT INTO "Kalunga".scontrino VALUES (5, '2025-07-08', 5, 7, 0, 539.00, 2);
+INSERT INTO "Kalunga".scontrino VALUES (6, '2025-07-08', 5, 11, 0, 4972.80, 2);
+INSERT INTO "Kalunga".scontrino VALUES (7, '2025-07-08', 5, 4, 0, 65.00, 2);
+INSERT INTO "Kalunga".scontrino VALUES (8, '2025-07-08', 5, 4, 0, 14.60, 2);
+INSERT INTO "Kalunga".scontrino VALUES (9, '2025-07-08', 5, 14, 0, 6.30, 2);
+INSERT INTO "Kalunga".scontrino VALUES (10, '2025-07-08', 5, 4, 0, 32.50, 2);
+INSERT INTO "Kalunga".scontrino VALUES (11, '2025-07-08', 5, 4, 0, 32.50, 2);
 
 
 --
@@ -990,6 +1021,17 @@ INSERT INTO "Kalunga".scontrino VALUES (1, '2025-07-05', 15, 13, 5, 25.46, 7);
 
 INSERT INTO "Kalunga".scontrino_prodotto VALUES (1, 1, 5.00, 4);
 INSERT INTO "Kalunga".scontrino_prodotto VALUES (1, 2, 1.70, 4);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (2, 1, 6.45, 2);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (2, 3, 2.18, 10);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (3, 12, 4.73, 100);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (4, 1, 6.80, 100);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (5, 10, 0.98, 550);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (6, 1, 6.40, 777);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (7, 1, 6.50, 10);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (8, 2, 1.46, 10);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (9, 5, 0.63, 10);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (10, 1, 6.50, 5);
+INSERT INTO "Kalunga".scontrino_prodotto VALUES (11, 1, 6.50, 5);
 
 
 --
@@ -1004,13 +1046,13 @@ INSERT INTO "Kalunga".storico_tessere VALUES (2, 19, 250, '2025-07-05', 10, 'chi
 -- Data for Name: tessera; Type: TABLE DATA; Schema: Kalunga; Owner: -
 --
 
-INSERT INTO "Kalunga".tessera VALUES (5, 0, '2025-06-01', 4, 2);
 INSERT INTO "Kalunga".tessera VALUES (6, 0, '2025-06-10', 5, 3);
 INSERT INTO "Kalunga".tessera VALUES (13, 50, '2025-07-01', 4, 5);
 INSERT INTO "Kalunga".tessera VALUES (14, 30, '2025-07-02', 5, 6);
 INSERT INTO "Kalunga".tessera VALUES (17, 310, '2025-07-05', 13, 9);
 INSERT INTO "Kalunga".tessera VALUES (19, 250, '2025-07-05', 10, 8);
 INSERT INTO "Kalunga".tessera VALUES (15, 20, '2025-07-03', 7, 7);
+INSERT INTO "Kalunga".tessera VALUES (5, 667, '2025-06-01', 4, 2);
 
 
 --
@@ -1018,7 +1060,6 @@ INSERT INTO "Kalunga".tessera VALUES (15, 20, '2025-07-03', 7, 7);
 --
 
 INSERT INTO "Kalunga".utente VALUES (1, 'Mario', 'Rossi', 'mario.rossi@mail.com', 'password123', 'gestore', 'MRRSSI80A01F205X');
-INSERT INTO "Kalunga".utente VALUES (2, 'Luca', 'Bianchi', 'luca.bianchi@mail.com', 'password123', 'cliente', 'LCBNCH85B01F205X');
 INSERT INTO "Kalunga".utente VALUES (3, 'Anna', 'Verdi', 'anna.verdi@mail.com', 'password123', 'cliente', 'ANVRDI90C01F205X');
 INSERT INTO "Kalunga".utente VALUES (4, 'Laura', 'Neri', 'laura.neri@mail.com', 'password123', 'gestore', 'LRNRI95D01F205X');
 INSERT INTO "Kalunga".utente VALUES (5, 'Andrea', 'Gallo', 'andrea.gallo@mail.com', 'password123', 'gestore', 'NDGLL90C01F205X');
@@ -1032,6 +1073,7 @@ INSERT INTO "Kalunga".utente VALUES (12, 'Marta', 'Vitali', 'marta.vitali@mail.c
 INSERT INTO "Kalunga".utente VALUES (13, 'Giorgio', 'Russo', 'giorgio.russo@mail.com', 'password123', 'cliente', 'GRGRSS97M01F205X');
 INSERT INTO "Kalunga".utente VALUES (14, 'Alessia', 'Marino', 'alessia.marino@mail.com', 'password123', 'cliente', 'LSMRNN98N01F205X');
 INSERT INTO "Kalunga".utente VALUES (15, 'Davide', 'Greco', 'davide.greco@mail.com', 'password123', 'cliente', 'DVDGRC99P01F205X');
+INSERT INTO "Kalunga".utente VALUES (2, 'Luca', 'Bianchi', 'luca.bianchi@mail.com', 'password1234', 'cliente', 'LCBNCH85B01F205X');
 
 
 --
@@ -1059,7 +1101,7 @@ SELECT pg_catalog.setval('"Kalunga".prodotto_id_seq', 23, true);
 -- Name: scontrino_id_seq; Type: SEQUENCE SET; Schema: Kalunga; Owner: -
 --
 
-SELECT pg_catalog.setval('"Kalunga".scontrino_id_seq', 1, true);
+SELECT pg_catalog.setval('"Kalunga".scontrino_id_seq', 11, true);
 
 
 --
@@ -1199,6 +1241,13 @@ CREATE TRIGGER after_insert_approvvigionamento AFTER INSERT ON "Kalunga".approvv
 --
 
 CREATE TRIGGER before_insert_approvv_con_check BEFORE INSERT ON "Kalunga".approvvigionamento FOR EACH ROW EXECUTE FUNCTION "Kalunga".trigger_effettua_approvv_con_check();
+
+
+--
+-- Name: fornitore trg_prevent_delete_fornitore; Type: TRIGGER; Schema: Kalunga; Owner: -
+--
+
+CREATE TRIGGER trg_prevent_delete_fornitore BEFORE DELETE ON "Kalunga".fornitore FOR EACH ROW EXECUTE FUNCTION "Kalunga".prevent_delete_fornitore_if_orders();
 
 
 --
