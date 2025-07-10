@@ -22,8 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-
-
 <h2>Login</h2>
 <form method="POST">
     <input type="text" name="username" placeholder="Username" required><br>
